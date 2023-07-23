@@ -28,6 +28,14 @@ void setup()
   turnMotorPower(0);
 }
 
+void handleMotorPower()
+{
+}
+
+void handleSpeed()
+{
+}
+
 void readCommand()
 {
   if (Serial.available() == 0)
@@ -46,16 +54,20 @@ void readCommand()
   if (command == 'P')
   {
     // power
-    if (data[0] == '1')
+
+    if (data.equals("1"))
     {
       Serial.println("Turning on motor");
       turnMotorPower(1);
     }
-    else if (data[0] == '0')
+    else if (data.equals("0"))
     {
       Serial.println("Turning off motor");
       turnMotorPower(0);
     }
+  }
+  else
+  {
   }
 }
 
