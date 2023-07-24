@@ -85,14 +85,8 @@ void standby(int shouldStandby)
 }
 
 int FAST = MAX_DUTY_CYCLE;
-int SLOW = MAX_DUTY_CYCLE / 2;
+int SLOW = MAX_DUTY_CYCLE / 10;
 int STOP = 0;
-
-void setSpeed(int left, int right)
-{
-  ledcWrite(PWMA_CHANNEL, left);
-  ledcWrite(PWMB_CHANNEL, right);
-}
 
 int TURN_LEFT = 0;
 int TURN_RIGHT = 1;
@@ -127,7 +121,7 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
     // slow and fast doesn't matter because they are turning in the same speed anyways
     slowChannel = PWMB_CHANNEL;
     fastChannel = PWMA_CHANNEL;
-    slowChannelSpeed = velocity;
+    slowChannelSpeed = fastChannelSpeed;
   }
   else
   {
@@ -136,12 +130,16 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   }
   if (velocity < 0)
   {
+    Serial.println("Setting motor directions to backward");
     setDirection(DIRECTION_BACKWARD);
   }
   else
   {
+    Serial.println("Setting motor directions to forward");
     setDirection(DIRECTION_FORWARD);
   }
+  Serial.printf("slowChannelSpeed: %d\n", slowChannelSpeed);
+  Serial.printf("fastChannelSpeed: %d\n", fastChannelSpeed);
   ledcWrite(slowChannel, slowChannelSpeed);
   ledcWrite(fastChannel, fastChannelSpeed);
 }
@@ -152,14 +150,13 @@ void setup()
 
   setupPins();
 
-  // deactivate standby
   standby(0);
 }
 
 void loop()
 {
   /* TODO: complete this sequence:
-  Run each step for 1 second.
+  Run each step for 1 second and stop for 1 second in between.
   1. Drive forward
   2. Drive backward
   3. Drive left, forward
@@ -173,21 +170,36 @@ void loop()
   drive(SLOW);
   delay(1000);
   Serial.println("stop.");
-  drive(0, TURN_NONE);
+  drive(0);
   delay(1000);
   Serial.println("Driving backward");
   drive(0 - SLOW, TURN_NONE);
   delay(1000);
+  Serial.println("stop.");
+  drive(0);
+  delay(1000);
   Serial.println("Turning left and forward");
   drive(SLOW, TURN_LEFT, 50);
   delay(1000);
+  Serial.println("stop.");
+  drive(0, TURN_NONE);
+  delay(1000);
   Serial.println("Turn left and backward");
-  drive(SLOW, TURN_LEFT, 50);
+  drive(0 - SLOW, TURN_LEFT, 50);
+  delay(1000);
+  Serial.println("stop.");
+  drive(0, TURN_NONE);
   delay(1000);
   Serial.println("Turn right and forward");
   drive(SLOW, TURN_RIGHT, 50);
   delay(1000);
+  Serial.println("stop.");
+  drive(0, TURN_NONE);
+  delay(1000);
   Serial.println("Turn right and backward");
   drive(0 - SLOW, TURN_RIGHT, 50);
+  delay(1000);
+  Serial.println("stop.");
+  drive(0, TURN_NONE);
   delay(1000);
 }
