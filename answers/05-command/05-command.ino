@@ -21,48 +21,8 @@ int STBY_PIN = 26;
 
 int MAX_DUTY_CYCLE = (int)(pow(2, PWM_RESOLUTION) - 1);
 
-void handleMotorPower()
-{
-}
-
-void handleSpeed()
-{
-}
-
-void readCommand()
-{
-  if (Serial.available() == 0)
-  {
-    return;
-  }
-  String input = Serial.readStringUntil('\n');
-  input.trim();
-  if (input.length() < 2)
-  {
-    Serial.println("Command too short.");
-    return;
-  }
-  char command = input[0];
-  String data = input.substring(1);
-  if (command == 'P')
-  {
-    // power
-
-    if (data.equals("1"))
-    {
-      Serial.println("Turning on motor");
-      turnMotorPower(1);
-    }
-    else if (data.equals("0"))
-    {
-      Serial.println("Turning off motor");
-      turnMotorPower(0);
-    }
-  }
-  else
-  {
-  }
-}
+unsigned long COMMAND_EXPIRY_MS = 5000;
+unsigned long COMMAND_READ_TIMEOUT = 1;
 
 void setupPwmPin(uint8_t pin, uint8_t channel)
 {
@@ -73,6 +33,7 @@ void setupPwmPin(uint8_t pin, uint8_t channel)
 void setupSerial()
 {
   Serial.begin(115200);
+  Serial.setTimeout(COMMAND_READ_TIMEOUT);
 }
 
 int DIRECTION_FORWARD = 1;
@@ -131,17 +92,10 @@ int FAST = MAX_DUTY_CYCLE;
 int SLOW = MAX_DUTY_CYCLE / 10;
 int STOP = 0;
 
-void setSpeed(int left, int right)
-{
-  ledcWrite(PWMA_CHANNEL, left);
-  ledcWrite(PWMB_CHANNEL, right);
-}
-
 int TURN_LEFT = 0;
 int TURN_RIGHT = 1;
 int TURN_NONE = 2;
 int TURN_AMOUNT_MAX = 100;
-int TURN_AMOUNT_MIN = 50;
 
 /// @brief Drive the robot by supplying different parameters
 /// @param velocity Drive forward
@@ -180,18 +134,112 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   }
   if (velocity < 0)
   {
-    Serial.println("Setting motor directions to backward");
+    // Serial.println("Setting motor directions to backward");
     setDirection(DIRECTION_BACKWARD);
   }
   else
   {
-    Serial.println("Setting motor directions to forward");
+    // Serial.println("Setting motor directions to forward");
     setDirection(DIRECTION_FORWARD);
   }
-  Serial.printf("slowChannelSpeed: %d\n", slowChannelSpeed);
-  Serial.printf("fastChannelSpeed: %d\n", fastChannelSpeed);
+  // Serial.printf("slowChannelSpeed: %d\n", slowChannelSpeed);
+  // Serial.printf("fastChannelSpeed: %d\n", fastChannelSpeed);
   ledcWrite(slowChannel, slowChannelSpeed);
   ledcWrite(fastChannel, fastChannelSpeed);
+}
+
+class CommandTime
+{
+public:
+  CommandTime(unsigned long expiryMs = COMMAND_EXPIRY_MS)
+  {
+    this->expiryMs = expiryMs;
+    this->reset();
+  }
+
+private:
+  unsigned long expiryMs = 0;
+  unsigned long last = INFINITY;
+
+public:
+  void refresh()
+  {
+    last = millis();
+  }
+
+  bool isExpired()
+  {
+    auto time = millis();
+    return (time > this->last) && (time - this->last >= this->expiryMs);
+  }
+
+  void reset()
+  {
+    this->last = INFINITY;
+  }
+};
+
+CommandTime velocityCommandTime;
+CommandTime turnCommandTime;
+
+class RobotState
+{
+public:
+  int velocity = 0;
+  uint8_t turnDirection = TURN_NONE;
+  uint8_t turnAmount = 0;
+};
+
+RobotState state;
+
+String buffer;
+
+void readCommand(String &command)
+{
+  if (Serial.available() == 0)
+  {
+    return;
+  }
+  String input = Serial.readString();
+  Serial.println("buffer pre-append:");
+  Serial.println(buffer);
+  buffer += input;
+  Serial.println("buffer:");
+  Serial.println(buffer);
+  int lineEndIndex = buffer.indexOf('\n');
+  Serial.printf("lineEndIndex: %d", lineEndIndex);
+  if (lineEndIndex >= 0)
+  {
+    command.remove(0);
+    command += buffer.substring(0, lineEndIndex);
+    buffer.remove(0, lineEndIndex + 1);
+  }
+}
+
+void handleCommand(String input)
+{
+  Serial.printf("handleCommand: got input: %s", input.c_str());
+  if (input.length() < 2)
+  {
+    Serial.println("Command too short.");
+    return;
+  }
+  char command = input[0];
+  String data = input.substring(1);
+  switch (command)
+  {
+  case 'V': // velocity
+    velocityCommandTime.refresh();
+    state.velocity = data.toInt();
+    break;  // must break unless you want to match against the next case as well
+  case 'T': // turn
+    turnCommandTime.refresh();
+    state.turnDirection = data.substring(0, 2).toInt();
+    state.turnAmount = data.substring(1).toInt();
+    break;
+  default:
+    break;
+  }
 }
 
 void setup()
@@ -199,9 +247,53 @@ void setup()
   setupSerial();
 
   setupPins();
+
+  standby(0);
+}
+
+void resetIfExpired()
+{
+  if (velocityCommandTime.isExpired())
+  {
+    Serial.println("velocitycommand expired");
+    state.velocity = 0;
+    velocityCommandTime.reset();
+    printState();
+  }
+  if (turnCommandTime.isExpired())
+  {
+    Serial.println("turncitycommand expired");
+    state.turnAmount = 0;
+    state.turnDirection = TURN_NONE;
+    turnCommandTime.reset();
+    printState();
+  }
+}
+
+String command;
+
+void printState()
+{
+  Serial.println("velocity:");
+  Serial.println(state.velocity);
+  Serial.println("turn direction:");
+  Serial.println(state.turnDirection);
+  Serial.println("turn amount:");
+  Serial.println(state.turnAmount);
 }
 
 void loop()
 {
-  readCommand();
+  drive(state.velocity, state.turnDirection, state.turnAmount);
+  resetIfExpired();
+
+  readCommand(command);
+  if (command.length() > 0)
+  {
+    Serial.println("command from readCommand:");
+    Serial.println(command);
+    handleCommand(command);
+    command.remove(0);
+    printState();
+  }
 }
