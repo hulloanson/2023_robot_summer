@@ -35,17 +35,15 @@ void setupPins()
   pinMode(BIN2_PIN, OUTPUT);
 }
 
-void cwOrCCW(int cw)
+void cwOrCCW(int cwA, int cwB)
 {
   // TODO: print message about whether we're turning clockwise
-  if (cw)
+  if (cwA)
   {
     Serial.println("Turning clockwise");
     // TODO: turn clockwise
     digitalWrite(AIN1_PIN, LOW);
     digitalWrite(AIN2_PIN, HIGH);
-    digitalWrite(BIN1_PIN, LOW);
-    digitalWrite(BIN2_PIN, HIGH);
   }
   else
   {
@@ -53,6 +51,19 @@ void cwOrCCW(int cw)
     // TODO: turn counter-clockwise
     digitalWrite(AIN1_PIN, HIGH);
     digitalWrite(AIN2_PIN, LOW);
+  }
+
+  if (cwB)
+  {
+    Serial.println("Turning clockwise");
+    // TODO: turn clockwise
+    digitalWrite(BIN1_PIN, LOW);
+    digitalWrite(BIN2_PIN, HIGH);
+  }
+  else
+  {
+    Serial.println("Turning counter clockwise");
+    // TODO: turn counter-clockwise
     digitalWrite(BIN1_PIN, HIGH);
     digitalWrite(BIN2_PIN, LOW);
   }
@@ -65,21 +76,40 @@ void cwOrCCW(int cw)
 void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 {
   // TODO: finish this
-  if (velocity > 0)
+  if (turnDirection == TURN_LEFT)
   {
     Serial.println("Velocity > 0");
-    cwOrCCW(1);
+    cwOrCCW(1, 0);
 
     analogWrite(PWMA_PIN, velocity * 1.02);
     analogWrite(PWMB_PIN, velocity);
   }
-  else if (velocity < 0)
+  else if (turnDirection == TURN_RIGHT)
   {
     Serial.println("Velocity < 0");
-    cwOrCCW(0);
+    cwOrCCW(0, 1);
 
     analogWrite(PWMA_PIN, velocity * 1.02);
     analogWrite(PWMB_PIN, velocity);
+  }
+  else if (turnDirection == TURN_NONE)
+  {
+    if (turnDirection == TURN_LEFT)
+    {
+      Serial.println("Velocity > 0");
+      cwOrCCW(1, 1);
+
+      analogWrite(PWMA_PIN, velocity * 1.02);
+      analogWrite(PWMB_PIN, velocity);
+    }
+    else if (turnDirection == TURN_RIGHT)
+    {
+      Serial.println("Velocity < 0");
+      cwOrCCW(0, 0);
+
+      analogWrite(PWMA_PIN, velocity * 1.02);
+      analogWrite(PWMB_PIN, velocity);
+    }
   }
 }
 
@@ -125,9 +155,9 @@ void loop()
   Also print messages in serial to indicate what's going on
   */
   changeToStandby(false);
-  drive(100, TURN_NONE, 0);
+  drive(50, TURN_LEFT, 0);
   delay(3000);
 
-  drive(-100, TURN_NONE, 0);
+  drive(50, TURN_RIGHT, 0);
   delay(3000);
 }
