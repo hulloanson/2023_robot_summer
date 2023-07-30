@@ -103,10 +103,13 @@ int TURN_AMOUNT_MAX = 100;
 /// @param turnAmount 0 - 100; Larger the number, the more you turn
 void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 {
+  // TODO: put in your version of drive()
 }
 
 String readCommand(String &command)
 {
+  // TODO: read command from Serial byte by byte until you see a '\n' (new line character)
+  // line ending have be "LF" in the serial monitor for this to work.
 }
 
 /// @brief
