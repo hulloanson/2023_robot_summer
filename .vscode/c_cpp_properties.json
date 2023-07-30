@@ -576,6 +576,19 @@
                 "__ATOMIC_RELEASE=3",
                 "USBCON"
             ]
+        },
+        {
+            "name": "Linux",
+            "compilerPath": "/home/impostor/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/bin/xtensa-esp32-elf-g++",
+            "compilerArgs": [],
+            "intelliSenseMode": "linux-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "forcedInclude": [],
+            "cStandard": "c17",
+            "cppStandard": "gnu++14",
+            "defines": []
         }
     ]
 }

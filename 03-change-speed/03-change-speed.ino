@@ -1,15 +1,17 @@
 #include <Arduino.h>
+#define PWM_FREQ 5000
 
-int PWM_FREQ = 5000;
 int PWM_RESOLUTION = 10;
 
-int PWMA_CHANNEL = 0;
+const int PWMA_CHANNEL = 0;
 int PWMB_CHANNEL = 1;
 
 int STANDBY_PIN = 26;
 
-int PWMA_PIN = 27;
-int AIN1_PIN = 14;
+#define PWMA_PIN 27
+#define AIN1_PIN 14
+// int PWMA_PIN = 27;
+// int AIN1_PIN = 14;
 int AIN2_PIN = 12;
 
 int PWMB_PIN = 32;
@@ -35,19 +37,36 @@ void changeToCw(int cw)
 }
 */
 
-void turnMotorPower(int onOff_IN1, int onOff_IN2, int Speed, int onOff_STANDBY)
+/*
+
+IN1 IN2 PWM STBY Mode |
+0 0 1 1 Stop  0
+0 1 1 1 CCW   1   
+1 0 1 1 CW    2
+1 1 1 0 STBY  3
+*/
+
+void turnMotorPower(int onOff_IN1, int onOff_IN2, int speed, int onOff_STANDBY)
 {
-  Serial.println(Speed);
+  // Serial.println(Speed);
+  
 
   digitalWrite(STANDBY_PIN, onOff_STANDBY);
 
-  analogWrite(PWMA_PIN, Speed);
+  analogWrite(PWMA_PIN, speed*1.02);
   digitalWrite(AIN1_PIN, onOff_IN1);
   digitalWrite(AIN2_PIN, onOff_IN2);
 
-  analogWrite(PWMB_PIN, Speed);
+  analogWrite(PWMB_PIN, speed);
   digitalWrite(BIN1_PIN, onOff_IN1);
   digitalWrite(BIN2_PIN, onOff_IN2);
+}
+
+void turnMotorPowerMasking(int mode) {
+  const int IN1 = (mode & 0b10) > 0 ? HIGH : LOW;
+  const int IN2 = (mode & 0b10) > 0 ? HIGH : LOW;
+  //const int PWM = (mode & 0b10) > 0 ? HIGH : LOW;
+  //const int STBY = (mode & 0b10) > 0 ? HIGH : LOW;
 }
 
 void setupPins()
@@ -93,10 +112,16 @@ void loop()
 
   Hint: refer to arduino-esp32 doc!
   */
-  turnMotorPower(HIGH, LOW, 127, HIGH);
-  delay(3000);
+
+  Serial.printf("\nMotor CW 3s\n");
+  turnMotorPower(LOW, HIGH, 25, HIGH);
+  delay(2000);
+  Serial.printf("Standby 3s\n");
   standby(1, 3000);
-  turnMotorPower(HIGH, LOW, 255, HIGH);
-  delay(3000);
-  standby(1, 3000);
+  
+  Serial.printf("Motor CCW 3s\n");
+  turnMotorPower(HIGH, LOW, 25, HIGH);
+  delay(2000);
+  Serial.printf("Standby 1s\n");
+  standby(1, 1000);
 }
