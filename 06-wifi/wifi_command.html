@@ -1,79 +1,82 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>Key Up/Down Listener</title>
     <script>
-      const ws = new WebSocket("ws://192.168.4.1:9090");
+        const ws = new WebSocket("ws://192.168.4.1:9090");
 
-      ws.onopen = function () {
-        console.log("Connected");
-      };
+        ws.onopen = function () {
+            console.log("Connected");
+        };
 
-      ws.onclose = function () {
-        console.log("Closed");
-      };
+        ws.onclose = function () {
+            console.log("Closed");
+        };
 
-      // Variables to store the key states
-      var keyUpDown = {
-        ArrowLeft: 0,
-        ArrowUp: 0,
-        ArrowRight: 0,
-        ArrowDown: 0,
-      };
+        // Variables to store the key states
+        var keyUpDown = {
+            ArrowLeft: 0,
+            ArrowUp: 0,
+            ArrowRight: 0,
+            ArrowDown: 0,
+        };
 
-      // Event listeners
-      document.addEventListener("keydown", function (event) {
-        console.log("keydown", event);
-        keyUpDown[event.key] = 1;
-        if (event.key === "ArrowLeft") {
-          ws.send("T-100");
-        } else if (event.key === "ArrowRight") {
-          ws.send("T-100");
-        } else if (event.key === "ArrowUp") {
-          ws.send("V100");
-        } else if (event.key === "ArrowDown") {
-          ws.send("V-100");
-        }
+        // Event listeners
+        document.addEventListener("keydown", function (event) {
+            console.log("keydown", event);
+            keyUpDown[event.key] = 1;
+            if (event.key === "ArrowLeft") {
+                ws.send("T-100");
+            } else if (event.key === "ArrowRight") {
+                ws.send("T-100");
+            } else if (event.key === "ArrowUp") {
+                ws.send("V100");
+            } else if (event.key === "ArrowDown") {
+                ws.send("V-100");
+            }
 
-        updateDisplay();
-      });
+            updateDisplay();
+        });
 
-      document.addEventListener("keyup", function (event) {
-        console.log("keyup", event);
-        keyUpDown[event.key] = 0;
-        if (event.key === "ArrowLeft") {
-          ws.send("T0");
-        } else if (event.key === "ArrowRight") {
-          ws.send("T0");
-        } else if (event.key === "ArrowUp") {
-          ws.send("V0");
-        } else if (event.key === "ArrowDown") {
-          ws.send("V0");
-        }
+        document.addEventListener("keyup", function (event) {
+            console.log("keyup", event);
+            keyUpDown[event.key] = 0;
+            if (event.key === "ArrowLeft") {
+                ws.send("T0");
+            } else if (event.key === "ArrowRight") {
+                ws.send("T0");
+            } else if (event.key === "ArrowUp") {
+                ws.send("V0");
+            } else if (event.key === "ArrowDown") {
+                ws.send("V0");
+            }
 
-        updateDisplay();
-      });
+            updateDisplay();
+        });
 
-      const updateDisplay = function () {
-        var divs = document.querySelectorAll(".key-state");
-        for (var i = 0; i < divs.length; i++) {
-          var div = divs[i];
-          var span = div.querySelector("span");
-          var key = span.id;
-          span.innerHTML = keyUpDown[key];
-        }
-      };
+        const updateDisplay = function () {
+            var divs = document.querySelectorAll(".key-state");
+            for (var i = 0; i < divs.length; i++) {
+                var div = divs[i];
+                var span = div.querySelector("span");
+                var key = span.id;
+                span.innerHTML = keyUpDown[key];
+            }
+        };
 
-      // Display the key states in HTML
-      document.addEventListener("DOMContentLoaded", function () {
-        updateDisplay();
-      });
+        // Display the key states in HTML
+        document.addEventListener("DOMContentLoaded", function () {
+            updateDisplay();
+        });
     </script>
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="key-state">Left: <span id="ArrowLeft"></span></div>
     <div class="key-state">Up: <span id="ArrowUp"></span></div>
     <div class="key-state">Right: <span id="ArrowRight"></span></div>
     <div class="key-state">Down: <span id="ArrowDown"></span></div>
-  </body>
+</body>
+
 </html>
