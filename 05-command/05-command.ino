@@ -88,6 +88,36 @@ void standby(int shouldStandby)
   }
 }
 
+void cwOrCCW(int cwA, int cwB)
+{
+  // TODO: print message about whether we're turning clockwise
+  if (cwA)
+  {
+    // TODO: turn clockwise
+    digitalWrite(AIN1_PIN, LOW);
+    digitalWrite(AIN2_PIN, HIGH);
+  }
+  else
+  {
+    // TODO: turn counter-clockwise
+    digitalWrite(AIN1_PIN, HIGH);
+    digitalWrite(AIN2_PIN, LOW);
+  }
+
+  if (cwB)
+  {
+    // TODO: turn clockwise
+    digitalWrite(BIN1_PIN, LOW);
+    digitalWrite(BIN2_PIN, HIGH);
+  }
+  else
+  {
+    // TODO: turn counter-clockwise
+    digitalWrite(BIN1_PIN, HIGH);
+    digitalWrite(BIN2_PIN, LOW);
+  }
+}
+
 int FAST = MAX_DUTY_CYCLE;
 int SLOW = MAX_DUTY_CYCLE / 10;
 int STOP = 0;
@@ -104,12 +134,82 @@ int TURN_AMOUNT_MAX = 100;
 void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 {
   // TODO: put in your version of drive()
+  if (turnDirection == TURN_LEFT)
+  {
+    cwOrCCW(1, 0);
+
+    analogWrite(PWMA_PIN, velocity * 1.02);
+    analogWrite(PWMB_PIN, velocity);
+  }
+  else if (turnDirection == TURN_RIGHT)
+  {
+    cwOrCCW(0, 1);
+
+    analogWrite(PWMA_PIN, velocity * 1.02);
+    analogWrite(PWMB_PIN, velocity);
+  }
+  else if (turnDirection == TURN_NONE)
+  {
+    if (velocity > 0)
+    {
+      cwOrCCW(1, 1);
+
+      analogWrite(PWMA_PIN, velocity * 1.02);
+      analogWrite(PWMB_PIN, velocity);
+    }
+    else if (velocity < 0)
+    {
+      cwOrCCW(0, 0);
+
+      analogWrite(PWMA_PIN, abs(velocity * 1.02));
+      analogWrite(PWMB_PIN, abs(velocity));
+    }
+  }
 }
 
-String readCommand(String &command)
+String readCommand1()
 {
+  // Alvin: only returns when it has a command
   // TODO: read command from Serial byte by byte until you see a '\n' (new line character)
   // line ending have be "LF" in the serial monitor for this to work.
+
+  String command = "";
+  while (true)
+  {
+    int message = Serial.read();
+    if (message != -1)
+    {
+      if (message == 10)
+      {
+        break;
+      }
+      command += (char)message;
+    }
+  }
+  return command;
+}
+
+String readCommand2()
+{
+  // Alvin: returns a lot more blank lines
+  // TODO: read command from Serial byte by byte until you see a '\n' (new line character)
+  // line ending have be "LF" in the serial monitor for this to work.
+
+  String command = "";
+  while (true)
+  {
+    int message = Serial.read();
+    if (message == -1)
+    {
+      break;
+    }
+    if (message == 10)
+    {
+      break;
+    }
+    command += (char)message;
+  }
+  return command;
 }
 
 /// @brief
@@ -120,6 +220,12 @@ void handleCommand(String input)
 {
   Serial.println("command from readCommand:");
   Serial.println(input);
+  if (input[0] == 'V')
+  {
+    int velocity = input.substring(1).toInt();
+    Serial.println("Velocity is " + velocity);
+    drive(velocity, TURN_NONE, 0);
+  }
 }
 
 void setup()
@@ -133,7 +239,12 @@ void setup()
 
 void loop()
 {
-  String command = readCommand(command);
+  /*
+  String whatToDo = readCommand1();
+  Serial.println("Command is " + whatToDo);
+*/
+
+  String command = readCommand2();
   if (command.length() > 0)
   {
     handleCommand(command);
