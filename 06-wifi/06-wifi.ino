@@ -204,7 +204,8 @@ WebSocketsServer server(9090);
 
 void setupWifi()
 {
-    WiFi.softAP("CuteRobot", "00000000");
+    WiFi.softAP("AlvinRobot", "AmongUsSus");
+    Serial.println("Wifi created");
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)

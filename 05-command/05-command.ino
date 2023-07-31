@@ -150,14 +150,14 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   }
   else if (turnDirection == TURN_NONE)
   {
-    if (velocity > 0)
+    if (velocity < 0)
     {
       cwOrCCW(1, 1);
 
       analogWrite(PWMA_PIN, velocity * 1.02);
       analogWrite(PWMB_PIN, velocity);
     }
-    else if (velocity < 0)
+    else if (velocity > 0)
     {
       cwOrCCW(0, 0);
 
@@ -196,21 +196,24 @@ String readCommand2()
   // line ending have be "LF" in the serial monitor for this to work.
 
   String command = "";
+  int message;
   while (true)
   {
-    int message = Serial.read();
-    if (message == -1)
-    {
+    message = Serial.read();
+    if (message == -1 || message == 10)
       break;
-    }
-    if (message == 10)
-    {
-      break;
-    }
+
     command += (char)message;
   }
+
   return command;
 }
+
+int velocity = 0;
+
+int turnDirection = TURN_NONE;
+
+int turnAmount = 0;
 
 /// @brief
 /// @param input
@@ -222,9 +225,15 @@ void handleCommand(String input)
   Serial.println(input);
   if (input[0] == 'V')
   {
-    int velocity = input.substring(1).toInt();
-    Serial.println("Velocity is " + velocity);
-    drive(velocity, TURN_NONE, 0);
+    velocity = input.substring(1).toInt();
+  }
+  if (input[0] == 'T' && input[1] == 'D')
+  {
+    turnDirection = input.substring(2).toInt();
+  }
+  if (input[0] == 'T' && input[1] == 'A')
+  {
+    turnAmount = input.substring(2).toInt();
   }
 }
 
