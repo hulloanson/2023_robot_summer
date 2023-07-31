@@ -148,77 +148,40 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   ledcWrite(fastChannel, fastChannelSpeed);
 }
 
-class CommandTime
+String readCommand()
 {
-public:
-  CommandTime(unsigned long expiryMs = COMMAND_EXPIRY_MS)
+  String command;
+
+  while (true)
   {
-    this->expiryMs = expiryMs;
-    this->reset();
+    int byte = Serial.read();
+    if (byte == -1 || byte == '\n')
+    {
+      break;
+    }
+    else
+    {
+      command += (char)byte;
+    }
   }
-
-private:
-  unsigned long expiryMs = 0;
-  unsigned long last = INFINITY;
-
-public:
-  void refresh()
-  {
-    last = millis();
-  }
-
-  bool isExpired()
-  {
-    auto time = millis();
-    return (time > this->last) && (time - this->last >= this->expiryMs);
-  }
-
-  void reset()
-  {
-    this->last = INFINITY;
-  }
-};
-
-CommandTime velocityCommandTime;
-CommandTime turnCommandTime;
-
-class RobotState
-{
-public:
-  int velocity = 0;
-  uint8_t turnDirection = TURN_NONE;
-  uint8_t turnAmount = 0;
-};
-
-RobotState state;
-
-String buffer;
-
-void readCommand(String &command)
-{
-  if (Serial.available() == 0)
-  {
-    return;
-  }
-  String input = Serial.readString();
-  Serial.println("buffer pre-append:");
-  Serial.println(buffer);
-  buffer += input;
-  Serial.println("buffer:");
-  Serial.println(buffer);
-  int lineEndIndex = buffer.indexOf('\n');
-  Serial.printf("lineEndIndex: %d", lineEndIndex);
-  if (lineEndIndex >= 0)
-  {
-    command.remove(0);
-    command += buffer.substring(0, lineEndIndex);
-    buffer.remove(0, lineEndIndex + 1);
-  }
+  return command;
 }
 
+int velocity = 0;
+
+int turnDirection = TURN_NONE;
+
+int turnAmount = 0;
+
+/// @brief
+/// @param input
+///         it takes 2 commands
+///         1. V: V100 drive the robot forward, V-50 drive it backward (but slower), etc
+///         2. T: T0 keep the robot straight, T100 to turn robot all the way to the right, T-100 all the way to the left
 void handleCommand(String input)
 {
-  Serial.printf("handleCommand: got input: %s", input.c_str());
+  Serial.print("handleCommand: got input:");
+  Serial.println(input);
   if (input.length() < 2)
   {
     Serial.println("Command too short.");
@@ -226,19 +189,26 @@ void handleCommand(String input)
   }
   char command = input[0];
   String data = input.substring(1);
-  switch (command)
+  if (command == 'V')
   {
-  case 'V': // velocity
-    velocityCommandTime.refresh();
-    state.velocity = data.toInt();
-    break;  // must break unless you want to match against the next case as well
-  case 'T': // turn
-    turnCommandTime.refresh();
-    state.turnDirection = data.substring(0, 2).toInt();
-    state.turnAmount = data.substring(1).toInt();
-    break;
-  default:
-    break;
+    velocity = data.toInt();
+  }
+  else if (command == 'T')
+  {
+    int turnValue = data.toInt();
+    if (turnValue < 0)
+    {
+      turnDirection = TURN_LEFT;
+    }
+    else if (turnValue > 0)
+    {
+      turnDirection = TURN_RIGHT;
+    }
+    else
+    {
+      turnDirection = TURN_NONE;
+    }
+    turnAmount = abs(turnValue);
   }
 }
 
@@ -251,49 +221,19 @@ void setup()
   standby(0);
 }
 
-void resetIfExpired()
-{
-  if (velocityCommandTime.isExpired())
-  {
-    Serial.println("velocitycommand expired");
-    state.velocity = 0;
-    velocityCommandTime.reset();
-    printState();
-  }
-  if (turnCommandTime.isExpired())
-  {
-    Serial.println("turncitycommand expired");
-    state.turnAmount = 0;
-    state.turnDirection = TURN_NONE;
-    turnCommandTime.reset();
-    printState();
-  }
-}
-
-String command;
-
-void printState()
-{
-  Serial.println("velocity:");
-  Serial.println(state.velocity);
-  Serial.println("turn direction:");
-  Serial.println(state.turnDirection);
-  Serial.println("turn amount:");
-  Serial.println(state.turnAmount);
-}
-
 void loop()
 {
-  drive(state.velocity, state.turnDirection, state.turnAmount);
-  resetIfExpired();
-
-  readCommand(command);
+  String command = readCommand();
   if (command.length() > 0)
   {
-    Serial.println("command from readCommand:");
-    Serial.println(command);
     handleCommand(command);
-    command.remove(0);
-    printState();
+    Serial.println("telling robot to drive. ");
+    Serial.print("velocity:");
+    Serial.println(velocity);
+    Serial.print("turnDirection:");
+    Serial.println(turnDirection);
+    Serial.print("turnAmount:");
+    Serial.println(turnAmount);
+    drive(velocity, turnDirection, turnAmount);
   }
 }
