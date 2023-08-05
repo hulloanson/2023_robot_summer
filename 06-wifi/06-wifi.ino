@@ -160,6 +160,8 @@ void handleCommand(String input)
 {
   Serial.print("handleCommand: got input:");
   Serial.println(input);
+  // TODO: drive robot based on command
+  // TODO: write code so that command expires after certain time
 }
 
 WebSocketsServer server(9090);
