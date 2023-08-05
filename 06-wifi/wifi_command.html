@@ -58,20 +58,27 @@
 
         const sendCommands = function () {
           if (!isWSConnected()) return;
-          ws.send(
-            keyUpDown["ArrowUp"]
-              ? "V200"
-              : keyUpDown["ArrowDown"]
-              ? "V-200"
-              : "V0"
-          );
-          ws.send(
-            keyUpDown["ArrowRight"]
-              ? "T100"
-              : keyUpDown["ArrowLeft"]
-              ? "T-100"
-              : "T0"
-          );
+          var command;
+
+          //
+          if (keyUpDown["ArrowUp"]) {
+            command = "V200";
+          } else if (keyUpDown["ArrowDown"]) {
+            command = "V-200";
+          } else {
+            command = "V0";
+          }
+          ws.send(command);
+
+          var command;
+          if (keyUpDown["ArrowRight"]) {
+            command = "T100";
+          } else if (keyUpDown["ArrowLeft"]) {
+            command = "T-100";
+          } else {
+            command = "T0";
+          }
+          ws.send(command);
         };
 
         setInterval(() => {
