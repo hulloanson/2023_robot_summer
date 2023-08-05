@@ -1,6 +1,18 @@
 #include <Arduino.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
+#include <WiFiAP.h>
+
+int PWM_FREQ = 5000;
+int PWM_RESOLUTION = 10;
+
+int PWMA_CHANNEL = 0;
+
+int PWMA_PIN = 27;
+
+int PWMB_CHANNEL = 1;
+
+int PWMB_PIN = 32;
 
 int AIN1_PIN = 14;
 int AIN2_PIN = 12;
@@ -145,17 +157,6 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
     ledcWrite(fastChannel, fastChannelSpeed);
 }
 
-String readCommand()
-{
-    // TODO: take client connection and read message from client there's any connected
-}
-
-int velocity = 0;
-
-int turnDirection = TURN_NONE;
-
-int turnAmount = 0;
-
 /// @brief
 /// @param input
 ///         it takes 2 commands
@@ -165,42 +166,30 @@ void handleCommand(String input)
 {
     Serial.print("handleCommand: got input:");
     Serial.println(input);
-    if (input.length() < 2)
-    {
-        Serial.println("Command too short.");
-        return;
-    }
-    char command = input[0];
-    String data = input.substring(1);
-    if (command == 'V')
-    {
-        velocity = data.toInt();
-    }
-    else if (command == 'T')
-    {
-        int turnValue = data.toInt();
-        if (turnValue < 0)
-        {
-            turnDirection = TURN_LEFT;
-        }
-        else if (turnValue > 0)
-        {
-            turnDirection = TURN_RIGHT;
-        }
-        else
-        {
-            turnDirection = TURN_NONE;
-        }
-        turnAmount = abs(turnValue);
-    }
+    // TODO: drive robot based on command
+    // TODO: write code so that command expires after certain time
 }
 
 WebSocketsServer server(9090);
 
 void setupWifi()
 {
-    WiFi.softAP("AlvinRobot", "AmongUsSus");
-    Serial.println("Wifi created");
+    // if (!WiFi.softAP("CuteRobot", "00000000"))
+    // {
+    //   Serial.println("software start up ap failed");
+    // }
+    if (!WiFi.begin("your wifi", "wifi password"))
+    {
+        Serial.println("connecting to wifi failed.");
+    }
+    while (!WiFi.isConnected())
+    {
+        sleep(1);
+        Serial.println("Waiting for wifi to be connected...");
+    }
+    Serial.println("Connected to wifi!");
+    Serial.println("IP address:");
+    Serial.println(WiFi.localIP());
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
@@ -219,7 +208,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     break;
     case WStype_TEXT:
         Serial.printf("[%u] get Text: %s\n", num, payload);
-
+        handleCommand(String(payload, length));
         break;
     case WStype_BIN:
     case WStype_ERROR:
@@ -244,21 +233,10 @@ void setup()
 
     standby(0);
     setupWifi();
+    setupWebsocketServer();
 }
 
 void loop()
 {
-    String command = readCommand();
-    if (command.length() > 0)
-    {
-        handleCommand(command);
-        Serial.println("telling robot to drive. ");
-        Serial.print("velocity:");
-        Serial.println(velocity);
-        Serial.print("turnDirection:");
-        Serial.println(turnDirection);
-        Serial.print("turnAmount:");
-        Serial.println(turnAmount);
-        drive(velocity, turnDirection, turnAmount);
-    }
+    server.loop();
 }
