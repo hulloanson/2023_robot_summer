@@ -3,15 +3,10 @@
   <head>
     <title>Key Up/Down Listener</title>
     <script>
-      const ws = new WebSocket("ws://192.168.4.1:9090");
-
-      ws.onopen = function () {
-        console.log("Connected");
-      };
-
-      ws.onclose = function () {
-        console.log("Closed");
-      };
+      var ws = null;
+      function connect() {
+        ws = new WebSocket("ws://192.168.4.1:9090");
+      }
 
       // Variables to store the key states
       var keyUpDown = {
@@ -21,19 +16,36 @@
         ArrowDown: 0,
       };
 
+      var connected = false;
+
+      connect();
+
+      ws.onopen = function () {
+        connected = true;
+        updateDisplay();
+        console.log("Connected");
+      };
+
+      ws.onclose = function () {
+        connected = false;
+        updateDisplay();
+        console.log("Closed");
+      };
+
       // Event listeners
       document.addEventListener("keydown", function (event) {
         console.log("keydown", event);
         keyUpDown[event.key] = 1;
         updateDisplay();
+        if (!ws) return;
         if (event.key === "ArrowLeft") {
-          ws.send("T-100");
+          ws.send("T-200");
         } else if (event.key === "ArrowRight") {
-          ws.send("T-100");
+          ws.send("T200");
         } else if (event.key === "ArrowUp") {
-          ws.send("V100");
+          ws.send("V200");
         } else if (event.key === "ArrowDown") {
-          ws.send("V-100");
+          ws.send("V-200");
         }
       });
 
@@ -41,6 +53,7 @@
         console.log("keyup", event);
         keyUpDown[event.key] = 0;
         updateDisplay();
+        if (!ws) return;
         if (event.key === "ArrowLeft") {
           ws.send("T0");
         } else if (event.key === "ArrowRight") {
@@ -60,6 +73,10 @@
           var key = span.id;
           span.innerHTML = keyUpDown[key];
         }
+        var connectedSpan = document.getElementById("connected-state");
+        connectedSpan.innerHTML = connected
+          ? "Connected"
+          : "Disconnected. Make sure robot is connected, wait or refresh to try again";
       };
 
       // Display the key states in HTML
@@ -73,5 +90,6 @@
     <div class="key-state">Up: <span id="ArrowUp"></span></div>
     <div class="key-state">Right: <span id="ArrowRight"></span></div>
     <div class="key-state">Down: <span id="ArrowDown"></span></div>
+    <div><span id="connected-state"></span></div>
   </body>
 </html>
