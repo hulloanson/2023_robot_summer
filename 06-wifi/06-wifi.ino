@@ -168,10 +168,22 @@ WebSocketsServer server(9090);
 
 void setupWifi()
 {
-  if (!WiFi.softAP("CuteRobot", "00000000"))
+  // if (!WiFi.softAP("CuteRobot", "00000000"))
+  // {
+  //   Serial.println("software start up ap failed");
+  // }
+  if (!WiFi.begin("your wifi", "wifi password"))
   {
-    Serial.println("software start up ap failed");
+    Serial.println("connecting to wifi failed.");
   }
+  while (!WiFi.isConnected())
+  {
+    sleep(1);
+    Serial.println("Waiting for wifi to be connected...");
+  }
+  Serial.println("Connected to wifi!");
+  Serial.println("IP address:");
+  Serial.println(WiFi.localIP());
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
