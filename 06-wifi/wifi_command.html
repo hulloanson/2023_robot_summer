@@ -3,77 +3,72 @@
   <head>
     <title>Key Up/Down Listener</title>
     <script>
+      const ws = new WebSocket("ws://192.168.4.1:9090");
+
+      // Variables to store the key states
+      var keyUpDown = {
+        ArrowLeft: false,
+        ArrowUp: false,
+        ArrowRight: false,
+        ArrowDown: false,
+      };
+
+      var connected = false;
+
+      ws.onopen = function () {
+        connect = true;
+        console.log("Connected");
+      };
+
+      ws.onclose = function () {
+        connect = false;
+        console.log("Closed");
+      };
+
+      // Event listeners
+      document.addEventListener("keydown", function (event) {
+        console.log("keydown", event);
+        keyUpDown[event.key] = true;
+      });
+
+      document.addEventListener("keyup", function (event) {
+        console.log("keyup", event);
+        keyUpDown[event.key] = false;
+      });
+
+      const keyStateElems = document.querySelectorAll(".key-state");
+      const connectionStateElem = document.getElementById("connection-state");
+      const updateDisplay = function () {
+        for (var i = 0; i < keyStateElems.length; i++) {
+          var div = keyStateElems[i];
+          var span = div.querySelector("span");
+          var key = span.id;
+          span.innerHTML = keyUpDown[key];
+        }
+        connectionStateElem.innerHTML = connected
+          ? "Connected"
+          : "Disconnected. Wait, or connect robot wifi and refresh the page.";
+      };
+
+      const sendCommands = function () {
+        ws.send(
+          keyUpDown["ArrowUp"]
+            ? "V200"
+            : keyUpDown["ArrowDown"]
+            ? "V-200"
+            : "V0"
+        );
+        ws.send(
+          keyUpDown["ArrowRight"]
+            ? "T100"
+            : keyUpDown["ArrowLeft"]
+            ? "T-100"
+            : "T0"
+        );
+      };
+
       // Display the key states in HTML
       document.addEventListener("DOMContentLoaded", function () {
-        const ws = new WebSocket("ws://192.168.4.1:9090");
-
-        // Variables to store the key states
-        var keyUpDown = {
-          ArrowLeft: false,
-          ArrowUp: false,
-          ArrowRight: false,
-          ArrowDown: false,
-        };
-
-        var connected = false;
-
-        ws.onopen = function () {
-          connect = true;
-          console.log("Connected");
-        };
-
-        ws.onclose = function () {
-          connect = false;
-          console.log("Closed");
-        };
-
-        const isWSConnected = function () {
-          return ws && ws.readyState === ws.OPEN;
-        };
-
-        // Event listeners
-        document.addEventListener("keydown", function (event) {
-          console.log("keydown", event);
-          keyUpDown[event.key] = true;
-        });
-
-        document.addEventListener("keyup", function (event) {
-          console.log("keyup", event);
-          keyUpDown[event.key] = false;
-        });
-
-        const keyStateElems = document.querySelectorAll(".key-state");
-        const connectionStateElem = document.getElementById("connection-state");
-        const updateDisplay = function () {
-          for (var i = 0; i < keyStateElems.length; i++) {
-            var div = keyStateElems[i];
-            var span = div.querySelector("span");
-            var key = span.id;
-            span.innerHTML = keyUpDown[key];
-          }
-          connectionStateElem.innerHTML = isWSConnected()
-            ? "Connected"
-            : "Disconnected. Wait, or connect robot wifi and refresh the page.";
-        };
-
-        const sendCommands = function () {
-          if (!isWSConnected()) return;
-          ws.send(
-            keyUpDown["ArrowUp"]
-              ? "V200"
-              : keyUpDown["ArrowDown"]
-              ? "V-200"
-              : "V0"
-          );
-          ws.send(
-            keyUpDown["ArrowRight"]
-              ? "T100"
-              : keyUpDown["ArrowLeft"]
-              ? "T-100"
-              : "T0"
-          );
-        };
-
         setInterval(() => {
           sendCommands();
           updateDisplay();
