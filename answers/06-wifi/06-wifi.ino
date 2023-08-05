@@ -151,6 +151,12 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   ledcWrite(fastChannel, fastChannelSpeed);
 }
 
+int velocity = 0;
+
+int turnDirection = TURN_NONE;
+
+int turnAmount = 0;
+
 /// @brief
 /// @param input
 ///         it takes 2 commands
@@ -160,6 +166,34 @@ void handleCommand(String input)
 {
   Serial.print("handleCommand: got input:");
   Serial.println(input);
+  if (input.length() < 2)
+  {
+    Serial.println("Command too short.");
+    return;
+  }
+  char command = input[0];
+  String data = input.substring(1);
+  if (command == 'V')
+  {
+    velocity = data.toInt();
+  }
+  else if (command == 'T')
+  {
+    int turnValue = data.toInt();
+    if (turnValue < 0)
+    {
+      turnDirection = TURN_LEFT;
+    }
+    else if (turnValue > 0)
+    {
+      turnDirection = TURN_RIGHT;
+    }
+    else
+    {
+      turnDirection = TURN_NONE;
+    }
+    turnAmount = abs(turnValue);
+  }
 }
 
 WebSocketsServer server(9090);
@@ -219,4 +253,5 @@ void setup()
 void loop()
 {
   server.loop();
+  drive(velocity, turnDirection, turnAmount);
 }
