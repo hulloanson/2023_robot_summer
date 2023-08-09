@@ -36,29 +36,6 @@ void setupSerial()
   Serial.setTimeout(COMMAND_READ_TIMEOUT);
 }
 
-int DIRECTION_FORWARD = 1;
-int DIRECTION_BACKWARD = 0;
-
-void setDirection(int forward)
-{
-  if (forward == DIRECTION_FORWARD)
-  {
-    // IN1 pins should be high and IN2 should be low to spin clockwise
-    digitalWrite(AIN1_PIN, 1);
-    digitalWrite(AIN2_PIN, 0);
-    digitalWrite(BIN1_PIN, 1);
-    digitalWrite(BIN2_PIN, 0);
-  }
-  else if (forward == DIRECTION_BACKWARD)
-  {
-    // IN1 pins should be low and IN2 pins should be high to spin counter-clockwise
-    digitalWrite(AIN1_PIN, 0);
-    digitalWrite(AIN2_PIN, 1);
-    digitalWrite(BIN1_PIN, 0);
-    digitalWrite(BIN2_PIN, 1);
-  }
-}
-
 void setupPins()
 {
   // output pin must be configured as outputs
@@ -150,7 +127,7 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
   }
   else if (turnDirection == TURN_NONE)
   {
-    if (velocity < 0)
+    if (velocity <= 0)
     {
       cwOrCCW(1, 1);
 
@@ -221,8 +198,6 @@ int turnAmount = 0;
 ///         1. V: V100 drive the robot forward, V-50 drive it backward (but slower), etc
 void handleCommand(String input)
 {
-  Serial.println("command from readCommand:");
-  Serial.println(input);
   if (input[0] == 'V')
   {
     velocity = input.substring(1).toInt();
@@ -248,14 +223,16 @@ void setup()
 
 void loop()
 {
-  /*
-  String whatToDo = readCommand1();
-  Serial.println("Command is " + whatToDo);
-*/
-
   String command = readCommand2();
   if (command.length() > 0)
   {
     handleCommand(command);
+    if (command == "V0")
+    {
+      Serial.println("Velocity is 0");
+    }
+    Serial.println(velocity);
+
+    drive(velocity, turnDirection, turnAmount);
   }
 }

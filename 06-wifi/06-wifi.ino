@@ -3,41 +3,18 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 
-int PWM_FREQ = 5000;
-int PWM_RESOLUTION = 10;
-
-int PWMA_CHANNEL = 0;
-
-int PWMA_PIN = 27;
-
-int PWMB_CHANNEL = 1;
-
-int PWMB_PIN = 32;
-
 int AIN1_PIN = 14;
 int AIN2_PIN = 12;
 int PWMA_PIN = 27;
-int PWMA_CHANNEL = 0;
 
 int BIN1_PIN = 33;
 int BIN2_PIN = 25;
 int PWMB_PIN = 32;
-int PWMB_CHANNEL = 1;
 
 int STBY_PIN = 26;
 
-int PWM_FREQ = 5000;
-int PWM_RESOLUTION = 10;
-int MAX_DUTY_CYCLE = (int)(pow(2, PWM_RESOLUTION) - 1);
-
 unsigned long COMMAND_EXPIRY_MS = 5000;
 unsigned long COMMAND_READ_TIMEOUT = 1;
-
-void setupPwmPin(uint8_t pin, uint8_t channel)
-{
-    ledcSetup(PWMA_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
-    ledcAttachPin(pin, channel);
-}
 
 void setupSerial()
 {
@@ -45,26 +22,29 @@ void setupSerial()
     Serial.setTimeout(COMMAND_READ_TIMEOUT);
 }
 
-int DIRECTION_FORWARD = 1;
-int DIRECTION_BACKWARD = 0;
-
-void setDirection(int forward)
+void cwOrCCW(int cwA, int cwB)
 {
-    if (forward == DIRECTION_FORWARD)
+    // TODO: print message about whether we're turning clockwise
+    if (cwA)
     {
-        // IN1 pins should be high and IN2 should be low to spin clockwise
-        digitalWrite(AIN1_PIN, 1);
-        digitalWrite(AIN2_PIN, 0);
-        digitalWrite(BIN1_PIN, 1);
-        digitalWrite(BIN2_PIN, 0);
+        digitalWrite(AIN1_PIN, LOW);
+        digitalWrite(AIN2_PIN, HIGH);
     }
-    else if (forward == DIRECTION_BACKWARD)
+    else
     {
-        // IN1 pins should be low and IN2 pins should be high to spin counter-clockwise
-        digitalWrite(AIN1_PIN, 0);
-        digitalWrite(AIN2_PIN, 1);
-        digitalWrite(BIN1_PIN, 0);
-        digitalWrite(BIN2_PIN, 1);
+        digitalWrite(AIN1_PIN, HIGH);
+        digitalWrite(AIN2_PIN, LOW);
+    }
+
+    if (cwB)
+    {
+        digitalWrite(BIN1_PIN, LOW);
+        digitalWrite(BIN2_PIN, HIGH);
+    }
+    else
+    {
+        digitalWrite(BIN1_PIN, HIGH);
+        digitalWrite(BIN2_PIN, LOW);
     }
 }
 
@@ -78,15 +58,15 @@ void setupPins()
     pinMode(STBY_PIN, OUTPUT);
 
     // setup PWM pin for pwm outputs
-    setupPwmPin(PWMA_PIN, PWMA_CHANNEL);
-    setupPwmPin(PWMB_PIN, PWMB_CHANNEL);
+    pinMode(PWMA_PIN, OUTPUT);
+    pinMode(PWMB_PIN, OUTPUT);
 }
 
 void standby(int shouldStandby)
 {
     // shouldStandBy = 1: standby
     // shouldStandBy = 0: let the motor move
-    if (shouldStandby == 1)
+    if (shouldStandby)
     {
         // standby need to be low i.e. 0 to activate
         digitalWrite(STBY_PIN, 0);
@@ -97,13 +77,9 @@ void standby(int shouldStandby)
     }
 }
 
-int FAST = MAX_DUTY_CYCLE;
-int SLOW = MAX_DUTY_CYCLE / 10;
-int STOP = 0;
-
-int TURN_LEFT = 0;
-int TURN_RIGHT = 1;
-int TURN_NONE = 2;
+int TURN_LEFT = 1;
+int TURN_RIGHT = 2;
+int TURN_NONE = 0;
 int TURN_AMOUNT_MAX = 100;
 
 /// @brief Drive the robot by supplying different parameters
@@ -112,49 +88,45 @@ int TURN_AMOUNT_MAX = 100;
 /// @param turnAmount 0 - 100; Larger the number, the more you turn
 void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 {
-    // turnAmount = 0 - 100
-    int slowChannel, fastChannel;
-    int clampedTurnAmount = min(TURN_AMOUNT_MAX, abs(turnAmount));
-    int speed = abs(velocity);
-    int slowChannelSpeed = speed * (TURN_AMOUNT_MAX - clampedTurnAmount) / TURN_AMOUNT_MAX;
-    int fastChannelSpeed = speed;
-
     if (turnDirection == TURN_LEFT)
     {
-        slowChannel = PWMA_CHANNEL;
-        fastChannel = PWMB_CHANNEL;
+        standby(0);
+        cwOrCCW(1, 0);
+
+        analogWrite(PWMA_PIN, abs(velocity) * 1.02);
+        analogWrite(PWMB_PIN, abs(velocity));
     }
     else if (turnDirection == TURN_RIGHT)
     {
-        slowChannel = PWMB_CHANNEL;
-        fastChannel = PWMA_CHANNEL;
+        standby(0);
+        cwOrCCW(0, 1);
+
+        analogWrite(PWMA_PIN, velocity * 1.02);
+        analogWrite(PWMB_PIN, velocity);
     }
     else if (turnDirection == TURN_NONE)
     {
-        // slow and fast doesn't matter because they are turning in the same speed anyways
-        slowChannel = PWMB_CHANNEL;
-        fastChannel = PWMA_CHANNEL;
-        slowChannelSpeed = fastChannelSpeed;
+        if (velocity < 0)
+        {
+            standby(0);
+            cwOrCCW(1, 1);
+
+            analogWrite(PWMA_PIN, abs(velocity) * 1.02);
+            analogWrite(PWMB_PIN, abs(velocity));
+        }
+        else if (velocity > 0)
+        {
+            standby(0);
+            cwOrCCW(0, 0);
+
+            analogWrite(PWMA_PIN, abs(velocity * 1.02));
+            analogWrite(PWMB_PIN, abs(velocity));
+        }
+        else
+        {
+            standby(1);
+        }
     }
-    else
-    {
-        Serial.print("Wring turnDirection. Not doing anything");
-        return;
-    }
-    if (velocity < 0)
-    {
-        // Serial.println("Setting motor directions to backward");
-        setDirection(DIRECTION_BACKWARD);
-    }
-    else
-    {
-        // Serial.println("Setting motor directions to forward");
-        setDirection(DIRECTION_FORWARD);
-    }
-    // Serial.printf("slowChannelSpeed: %d\n", slowChannelSpeed);
-    // Serial.printf("fastChannelSpeed: %d\n", fastChannelSpeed);
-    ledcWrite(slowChannel, slowChannelSpeed);
-    ledcWrite(fastChannel, fastChannelSpeed);
 }
 
 /// @brief
@@ -162,11 +134,43 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 ///         it takes 2 commands
 ///         1. V: V100 drive the robot forward, V-50 drive it backward (but slower), etc
 ///         2. T: T0 keep the robot straight, T100 to turn robot all the way to the right, T-100 all the way to the left
+
+int handleVelocity = 0;
+int handleTurnDirection = TURN_NONE;
+int handleTurnAmount = 0;
+
+int timeOfLastCommand = 0;
+
 void handleCommand(String input)
 {
-    Serial.print("handleCommand: got input:");
-    Serial.println(input);
-    // TODO: drive robot based on command
+
+    // Serial.println("command from readCommand:");
+    // Serial.println(input);
+
+    if (input != "V0" && input != "T0")
+    {
+        // Serial.println("Command sent");
+        timeOfLastCommand = millis();
+    }
+
+    if (input[0] == 'V')
+    {
+        handleVelocity = input.substring(1).toInt();
+    }
+    else if (input[0] == 'T')
+    {
+        if (input.substring(1).toInt() == 2)
+        {
+            handleVelocity = 10;
+            handleTurnDirection = 2;
+        }
+        if (input.substring(1).toInt() == 1)
+        {
+            handleVelocity = 10;
+            handleTurnDirection = TURN_LEFT;
+        }
+    }
+
     // TODO: write code so that command expires after certain time
 }
 
@@ -174,11 +178,7 @@ WebSocketsServer server(9090);
 
 void setupWifi()
 {
-    // if (!WiFi.softAP("CuteRobot", "00000000"))
-    // {
-    //   Serial.println("software start up ap failed");
-    // }
-    if (!WiFi.begin("your wifi", "wifi password"))
+    if (!WiFi.begin("doghouse", "22512251"))
     {
         Serial.println("connecting to wifi failed.");
     }
@@ -207,7 +207,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     }
     break;
     case WStype_TEXT:
-        Serial.printf("[%u] get Text: %s\n", num, payload);
         handleCommand(String(payload, length));
         break;
     case WStype_BIN:
@@ -219,6 +218,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
         break;
     }
 }
+
 void setupWebsocketServer()
 {
     server.begin();
@@ -228,15 +228,19 @@ void setupWebsocketServer()
 void setup()
 {
     setupSerial();
-
     setupPins();
-
-    standby(0);
+    standby(1);
     setupWifi();
     setupWebsocketServer();
 }
 
 void loop()
 {
+    if ((millis() - timeOfLastCommand) > 50)
+    {
+        handleVelocity = 0;
+        handleTurnDirection = TURN_NONE;
+    }
+    drive(handleVelocity, handleTurnDirection, handleTurnAmount);
     server.loop();
 }

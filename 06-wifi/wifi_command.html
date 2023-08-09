@@ -4,44 +4,84 @@
 <head>
   <title>Key Up/Down Listener</title>
   <script>
-    const ws = new WebSocket("ws://192.168.4.1:9090");
-
-    ws.onopen = function () {
-      console.log("Connected");
-    };
-
-    ws.onclose = function () {
-      console.log("Closed");
-    };
-
-    const isWSConnected = function () {
-      return ws && ws.readyState === ws.OPEN;
-    };
-
-    // Event listeners
-    document.addEventListener("keydown", function (event) {
-      console.log("keydown", event);
-      keyUpDown[event.key] = true;
-    });
-
-    document.addEventListener("keyup", function (event) {
-      console.log("keyup", event);
-      keyUpDown[event.key] = false;
-    });
-
-    const updateDisplay = function () {
-      var divs = document.querySelectorAll(".key-state");
-      for (var i = 0; i < divs.length; i++) {
-        var div = divs[i];
-        var span = div.querySelector("span");
-        var key = span.id;
-        span.innerHTML = keyUpDown[key];
-      }
-    };
-
     // Display the key states in HTML
     document.addEventListener("DOMContentLoaded", function () {
-      updateDisplay();
+      const ws = new WebSocket("ws://192.168.86.59:9090");
+
+      // Variables to store the key states
+      var keyUpDown = {
+        ArrowLeft: false,
+        ArrowUp: false,
+        ArrowRight: false,
+        ArrowDown: false,
+      };
+
+      var connected = false;
+
+      ws.onopen = function () {
+        connect = true;
+        console.log("Connected");
+      };
+
+      ws.onclose = function () {
+        connect = false;
+        console.log("Closed");
+      };
+
+      const isWSConnected = function () {
+        return ws && ws.readyState === ws.OPEN;
+      };
+
+      // Event listeners
+      document.addEventListener("keydown", function (event) {
+        console.log("keydown", event);
+        keyUpDown[event.key] = true;
+      });
+
+      document.addEventListener("keyup", function (event) {
+        console.log("keyup", event);
+        keyUpDown[event.key] = false;
+      });
+
+      const keyStateElems = document.querySelectorAll(".key-state");
+      const connectionStateElem = document.getElementById("connection-state");
+      const updateDisplay = function () {
+        for (var i = 0; i < keyStateElems.length; i++) {
+          var div = keyStateElems[i];
+          var span = div.querySelector("span");
+          var key = span.id;
+          span.innerHTML = keyUpDown[key];
+        }
+        connectionStateElem.innerHTML = isWSConnected()
+          ? "Connected"
+          : "Disconnected. Wait, or connect robot wifi and refresh the page.";
+      };
+
+      const sendCommands = function () {
+        if (!isWSConnected()) return;
+        var cmd = keyUpDown["ArrowUp"]
+          ? "V200"
+          : keyUpDown["ArrowDown"]
+            ? "V-200"
+            : "V0";
+
+        console.log("sending ", cmd)
+        ws.send(
+          cmd
+        );
+        ws.send(
+          keyUpDown["ArrowRight"]
+            ? "T2"
+            : keyUpDown["ArrowLeft"]
+              ? "T1"
+              : "T0"
+        );
+      };
+
+      setInterval(() => {
+        sendCommands();
+        updateDisplay();
+      }, 50);
     });
   </script>
 </head>
@@ -51,6 +91,7 @@
   <div class="key-state">Up: <span id="ArrowUp"></span></div>
   <div class="key-state">Right: <span id="ArrowRight"></span></div>
   <div class="key-state">Down: <span id="ArrowDown"></span></div>
+  <div><span id="connection-state"></span></div>
 </body>
 
 </html>
