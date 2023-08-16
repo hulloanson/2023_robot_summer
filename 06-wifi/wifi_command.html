@@ -198,7 +198,214 @@
   </script>
 </head>
 
-<body>
+<body><!--
+  <!DOCTYPE html>
+  <html>
+  
+  <head>
+    <title>Key Up/Down Listener</title>
+    <script>
+      // Display the key states in HTML
+      document.addEventListener("DOMContentLoaded", function () {
+        const ws = new WebSocket("ws://192.168.86.61:9090");
+  
+        // Variables to store the key states
+        var keyUpDown = {
+          ArrowLeft: false,
+          ArrowUp: false,
+          ArrowRight: false,
+          ArrowDown: false,
+        };
+  
+        var connected = false;
+  
+        ws.onopen = function () {
+          connect = true;
+          console.log("Connected");
+        };
+  
+        ws.onclose = function () {
+          connect = false;
+          console.log("Closed");
+        };
+  
+        const isWSConnected = function () {
+          return ws && ws.readyState === ws.OPEN;
+        };
+  
+        // Event listeners
+        document.addEventListener("keydown", function (event) {
+          console.log("keydown", event);
+          keyUpDown[event.key] = true;
+        });
+  
+        document.addEventListener("keyup", function (event) {
+          console.log("keyup", event);
+          keyUpDown[event.key] = false;
+        });
+  
+        const keyStateElems = document.querySelectorAll(".key-state");
+        const connectionStateElem = document.getElementById("connection-state");
+        const updateDisplay = function () {
+          for (var i = 0; i < keyStateElems.length; i++) {
+            var div = keyStateElems[i];
+            var span = div.querySelector("span");
+            var key = span.id;
+            span.innerHTML = keyUpDown[key];
+          }
+          connectionStateElem.innerHTML = isWSConnected()
+            ? "Connected"
+            : "Disconnected. Wait, or connect robot wifi and refresh the page.";
+        };
+  
+        const sendCommands = function () {
+          if (!isWSConnected()) return;
+          var cmd = keyUpDown["ArrowUp"]
+            ? "V200"
+            : keyUpDown["ArrowDown"]
+              ? "V-200"
+              : "V0";
+  
+          console.log("sending ", cmd)
+          ws.send(
+            cmd
+          );
+          ws.send(
+            keyUpDown["ArrowRight"]
+              ? "T2"
+              : keyUpDown["ArrowLeft"]
+                ? "T1"
+                : "T0"
+          );
+        };
+  
+        setInterval(() => {
+          sendCommands();
+          updateDisplay();
+        }, 50);
+      });
+    </script>
+  </head>
+  
+  <body>
+    <div class="key-state">Left: <span id="ArrowLeft"></span></div>
+    <div class="key-state">Up: <span id="ArrowUp"></span></div>
+    <div class="key-state">Right: <span id="ArrowRight"></span></div>
+    <div class="key-state">Down: <span id="ArrowDown"></span></div>
+    <div><span id="connection-state"></span></div>
+  </body>
+  
+  </html>
+  -->
+
+  <!DOCTYPE html>
+  <html>
+
+  <head>
+    <title>Key Up/Down Listener</title>
+    <script>
+      // Display the key states in HTML
+      document.addEventListener("DOMContentLoaded", function () {
+        const ws = new WebSocket("ws://192.168.86.61:9090");
+
+        // Variables to store the key states
+        var keyUpDown = {
+          ArrowLeft: false,
+          ArrowUp: false,
+          ArrowRight: false,
+          ArrowDown: false,
+        };
+
+        var timeDelayed = 500;
+
+        var connected = false;
+
+        ws.onopen = function () {
+          connect = true;
+          console.log("Connected");
+        };
+
+        ws.onclose = function () {
+          connect = false;
+          console.log("Closed");
+        };
+
+        const isWSConnected = function () {
+          return ws && ws.readyState === ws.OPEN;
+        };
+
+        // Event listeners
+        document.addEventListener("keydown", function (event) {
+          // console.log("keydown", event);
+          // console.log("event key", event.key)
+          // timeDelayed += 100;
+          keyUpDown[event.key] = true;
+        });
+
+        document.addEventListener("keyup", function (event) {
+          // console.log("keyup", event);
+          keyUpDown[event.key] = false;
+        });
+
+        const keyStateElems = document.querySelectorAll(".key-state");
+        const connectionStateElem = document.getElementById("connection-state");
+        const updateDisplay = function () {
+          for (var i = 0; i < keyStateElems.length; i++) {
+            var div = keyStateElems[i];
+            var span = div.querySelector("span");
+            var key = span.id;
+            span.innerHTML = keyUpDown[key];
+          }
+          connectionStateElem.innerHTML = isWSConnected()
+            ? "Connected"
+            : "Disconnected. Wait, or connect robot wifi and refresh the page.";
+        };
+
+        const sendCommands = function () {
+          if (!isWSConnected()) return;
+          ws.send(
+            keyUpDown["ArrowUp"]
+              ? "V200"
+              : keyUpDown["ArrowDown"]
+                ? "V-200"
+                : "V0"
+          );
+          ws.send(
+            keyUpDown["ArrowRight"]
+              ? "T100"
+              : keyUpDown["ArrowLeft"]
+                ? "T-100"
+                : "T0"
+          );
+        };
+
+        // setInterval(() => {
+        //   sendCommands();
+        //   updateDisplay();
+        // }, 50);
+        const delay = (time) => new Promise(r => setTimeout(r, time));
+        const execution = () => {
+          sendCommands();
+          updateDisplay();
+          console.log("execution", timeDelayed);
+          if (timeDelayed < 1000)
+            delay(timeDelayed).then(() => execution());
+        }
+
+        execution();
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="key-state">Left: <span id="ArrowLeft"></span></div>
+    <div class="key-state">Up: <span id="ArrowUp"></span></div>
+    <div class="key-state">Right: <span id="ArrowRight"></span></div>
+    <div class="key-state">Down: <span id="ArrowDown"></span></div>
+    <div><span id="connection-state"></span></div>
+  </body>
+
+  </html>
   <div class="key-state">Left: <span id="ArrowLeft"></span></div>
   <div class="key-state">Up: <span id="ArrowUp"></span></div>
   <div class="key-state">Right: <span id="ArrowRight"></span></div>
