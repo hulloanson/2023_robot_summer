@@ -4,7 +4,7 @@ const d = {
 }
 
 function setup() {
-  createCanvas(1100, 400)
+  createCanvas(1500, 500)
   drawBackground()
   // frameRate(5)
   d.motor.analogWrite(100)
@@ -13,7 +13,9 @@ function setup() {
 
 function drawBackground() {
   background(150, 100, 50)
-  line(1000, 0, 1000, 400)
+  line(50, 0, 50, 500)
+  line(500, 0, 500, 500)
+  line(1000, 0, 1000, 500)
 }
 
 function drawMotor({ x, y, w, h }) {
@@ -27,11 +29,11 @@ function drawMotor({ x, y, w, h }) {
 }
 
 function drawState({ x, v, counter, p }, textYLocation) {
-  text('P: ' + p, 50, textYLocation)
-  text('V: ' + v, 100, textYLocation)
-  text('X: ' + x, 200, textYLocation)
-  text('C: ' + counter, 300, textYLocation)
-  text('time: ' + _millis(), 500, textYLocation)
+  text('P: ' + Math.floor(p), 50, textYLocation)
+  text('V: ' + Math.floor(v * 10) / 10, 100, textYLocation)
+  text('X: ' + Math.floor(x), 200, textYLocation)
+  text('C: ' + Math.floor(counter), 300, textYLocation)
+  text('time: ' + Math.floor(millis()), 500, textYLocation)
 }
 
 function updateModel() {

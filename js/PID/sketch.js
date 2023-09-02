@@ -4,7 +4,7 @@ const d = {
 }
 
 function setup() {
-  createCanvas(1000, 400)
+  createCanvas(1400, 400)
   drawBackground()
   // frameRate(60)
   arduinoSetup()
@@ -12,7 +12,9 @@ function setup() {
 
 function drawBackground() {
   background(150, 100, 50)
-  line(800, 0, 800, 400)
+  line(50, 0, 50, 500)
+  line(500, 0, 500, 500)
+  line(1000, 0, 1000, 500)
 }
 
 function drawMotor({ x, y, w, h }) {
@@ -33,9 +35,10 @@ function drawState({ x, v, counter, p }, textYLocation) {
   text('time: ' + Math.floor(millis()), 500, textYLocation)
 }
 
-function printPIDState({ Input, Output }, textYLocation) {
-  text('PID Input: ' + Math.floor(Input), 600, textYLocation)
-  text('Onput: ' + Math.floor(Output), 700, textYLocation)
+function printPIDState({ Input, Output, SetPoint }, textYLocation) {
+  text('PID Input: ' + Math.floor(Input), 700, textYLocation)
+  text('Onput: ' + Math.floor(Output), 800, textYLocation)
+  text('SP: ' + Math.floor(SetPoint), 900, textYLocation)
 }
 
 function updateModel() {
