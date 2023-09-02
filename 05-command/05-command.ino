@@ -103,23 +103,113 @@ int TURN_AMOUNT_MAX = 100;
 /// @param turnAmount 0 - 100; Larger the number, the more you turn
 void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
 {
-  // TODO: put in your version of drive()
+  // turnAmount = 0 - 100
+  int slowChannel, fastChannel;
+  int clampedTurnAmount = min(TURN_AMOUNT_MAX, abs(turnAmount));
+  int speed = abs(velocity);
+  int slowChannelSpeed = speed * (TURN_AMOUNT_MAX - clampedTurnAmount) / TURN_AMOUNT_MAX;
+  int fastChannelSpeed = speed;
+
+  if (turnDirection == TURN_LEFT)
+  {
+    slowChannel = PWMA_CHANNEL;
+    fastChannel = PWMB_CHANNEL;
+  }
+  else if (turnDirection == TURN_RIGHT)
+  {
+    slowChannel = PWMB_CHANNEL;
+    fastChannel = PWMA_CHANNEL;
+  }
+  else if (turnDirection == TURN_NONE)
+  {
+    // slow and fast doesn't matter because they are turning in the same speed anyways
+    slowChannel = PWMB_CHANNEL;
+    fastChannel = PWMA_CHANNEL;
+    slowChannelSpeed = fastChannelSpeed;
+  }
+  else
+  {
+    Serial.print("Wring turnDirection. Not doing anything");
+    return;
+  }
+  if (velocity < 0)
+  {
+    // Serial.println("Setting motor directions to backward");
+    setDirection(DIRECTION_BACKWARD);
+  }
+  else
+  {
+    // Serial.println("Setting motor directions to forward");
+    setDirection(DIRECTION_FORWARD);
+  }
+  // Serial.printf("slowChannelSpeed: %d\n", slowChannelSpeed);
+  // Serial.printf("fastChannelSpeed: %d\n", fastChannelSpeed);
+  ledcWrite(slowChannel, slowChannelSpeed);
+  ledcWrite(fastChannel, fastChannelSpeed);
 }
 
-String readCommand(String &command)
+String readCommand()
 {
-  // TODO: read command from Serial byte by byte until you see a '\n' (new line character)
-  // line ending have be "LF" in the serial monitor for this to work.
+  String command;
+
+  while (true)
+  {
+    int byte = Serial.read();
+    if (byte == -1 || byte == '\n')
+    {
+      break;
+    }
+    else
+    {
+      command += (char)byte;
+    }
+  }
+  return command;
 }
+
+int velocity = 0;
+
+int turnDirection = TURN_NONE;
+
+int turnAmount = 0;
 
 /// @brief
 /// @param input
 ///         it takes 2 commands
 ///         1. V: V100 drive the robot forward, V-50 drive it backward (but slower), etc
+///         2. T: T0 keep the robot straight, T100 to turn robot all the way to the right, T-100 all the way to the left
 void handleCommand(String input)
 {
-  Serial.println("command from readCommand:");
+  Serial.print("handleCommand: got input:");
   Serial.println(input);
+  if (input.length() < 2)
+  {
+    Serial.println("Command too short.");
+    return;
+  }
+  char command = input[0];
+  String data = input.substring(1);
+  if (command == 'V')
+  {
+    velocity = data.toInt();
+  }
+  else if (command == 'T')
+  {
+    int turnValue = data.toInt();
+    if (turnValue < 0)
+    {
+      turnDirection = TURN_LEFT;
+    }
+    else if (turnValue > 0)
+    {
+      turnDirection = TURN_RIGHT;
+    }
+    else
+    {
+      turnDirection = TURN_NONE;
+    }
+    turnAmount = abs(turnValue);
+  }
 }
 
 void setup()
@@ -133,9 +223,17 @@ void setup()
 
 void loop()
 {
-  String command = readCommand(command);
+  String command = readCommand();
   if (command.length() > 0)
   {
     handleCommand(command);
+    Serial.println("telling robot to drive. ");
+    Serial.print("velocity:");
+    Serial.println(velocity);
+    Serial.print("turnDirection:");
+    Serial.println(turnDirection);
+    Serial.print("turnAmount:");
+    Serial.println(turnAmount);
+    drive(velocity, turnDirection, turnAmount);
   }
 }
