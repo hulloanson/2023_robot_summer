@@ -44,6 +44,10 @@ class PID {
     this.SetTunings(Kp, Ki, Kd, POn)
 
     this.lastTime = millis() - this.SampleTime
+
+    // my stuff
+    this.rstart = millis()
+    this.riteration = []
   }
 
   Compute() {
@@ -80,6 +84,18 @@ class PID {
       // Remember some variables for next time
       this.lastInput = input
       this.lastTime = now
+
+      // my stuff
+      const rdt = now - this.rstart
+      this.riteration.push({
+        t: rdt,
+        input: this.myState.Input,
+        output: this.myState.Output,
+        setPoint: this.myState.SetPoint,
+        errSum: this.outputSum,
+        outMax: this.outMax,
+        outMin: this.outMin,
+      })
       return true
     } else return false
   }
@@ -121,6 +137,7 @@ class PID {
       else if (this.outputSum < this.outMin) this.outputSum = this.outMin
     }
   }
+
   SetMode(Mode) {
     const newAuto = Mode == AUTOMATIC
     if (newAuto && !this.inAuto) {
@@ -165,5 +182,9 @@ class PID {
   setNewSetPoint(newSetPoint) {
     this.myState.SetPoint = newSetPoint
     this.outputSum = 0
+  }
+
+  getIterationData() {
+    return this.riteration
   }
 }

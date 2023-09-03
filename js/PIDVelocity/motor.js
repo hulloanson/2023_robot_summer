@@ -4,14 +4,12 @@ class Motor {
     this.y = y
     this.w = 30
     this.h = 10
-    this.p = 200
+    this.p = 0
     this.counter = 0
+    this.velDefect = 0
   }
 
   analogWrite(value) {
-    // if (value <= -1000) this.p = -1000
-    // else if (value >= 1000) this.p = 1000
-    // else
     this.p = value
   }
 
@@ -35,10 +33,8 @@ class Motor {
   }
 
   #vel() {
-    const dir = this.p > 0 ? 1 : -1
-    // const v = Math.min((this.p * this.p) / 10000, this.p * 0.1)
-    const v = (this.p * this.p) / 10000
-    return dir * v
+    const v = (this.p / 300) * 100
+    return v + this.velDefect
   }
 
   update() {

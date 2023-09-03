@@ -1,16 +1,8 @@
-const d = {
-  motor: new Motor(50, 200),
-  motor2: new Motor(50, 300),
-  startTime: 0,
-}
-
 function setup() {
-  createCanvas(1500, 500)
+  createCanvas(1400, 400)
   drawBackground()
-  // frameRate(5)
-  d.motor.analogWrite(100)
-  d.motor2.analogWrite(150)
-  startTime = millis()
+  // frameRate(60)
+  arduinoSetup()
 }
 
 function drawBackground() {
@@ -38,12 +30,21 @@ function drawState({ x, v, counter, p }, textYLocation) {
   text('time: ' + Math.floor(millis()), 500, textYLocation)
 }
 
+function printPIDState({ myState, outputSum }, textYLocation) {
+  const { Input, Output, SetPoint } = myState
+  text('PID SP: ' + Math.floor(SetPoint), 700, textYLocation)
+  text('Input: ' + Math.floor(Input), 800, textYLocation)
+  text('Onput: ' + Math.floor(Output), 900, textYLocation)
+  text('Sum(err): ' + Math.floor(outputSum), 1005, textYLocation)
+}
+
 function updateModel() {
   d.motor.update()
   d.motor2.update()
 }
 
 function draw() {
+  arduinoLoop()
   const motor1State = d.motor.state()
   const motor2State = d.motor2.state()
   drawBackground()
@@ -51,15 +52,22 @@ function draw() {
   drawMotor(motor2State)
   drawState(motor1State, 30)
   drawState(motor2State, 50)
-
-  const now = millis()
-  if (now - startTime < 1000) {
-    d.motor.analogWrite(0)
-  } else if (now - startTime < 5000) {
-    d.motor.analogWrite(250)
-  } else if (now - startTime < 2700) {
-    d.motor.analogWrite(0)
-  }
-
+  printPIDState(myPID, 30)
+  printPIDState(myPID2, 50)
   updateModel()
+}
+
+function downloadCsv(pid) {
+  const rows = pid
+    .getIterationData()
+    .map(({ t, input, output, setPoint, errSum, outMax, outMin }) =>
+      [t, input, output, setPoint, errSum, outMax, outMin].join(',')
+    )
+
+  const csvContent =
+    'data:text/csv;charset=utf-8,' +
+    'time,Input,Output,SetPoint,errSum,outMax,outMin\n' +
+    rows.join('\n')
+  const encodedUri = encodeURI(csvContent)
+  window.open(encodedUri)
 }

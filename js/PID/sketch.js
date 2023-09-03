@@ -1,8 +1,3 @@
-const d = {
-  motor: new Motor(50, 200),
-  motor2: new Motor(50, 300),
-}
-
 function setup() {
   createCanvas(1400, 400)
   drawBackground()
@@ -35,27 +30,49 @@ function drawState({ x, v, counter, p }, textYLocation) {
   text('time: ' + Math.floor(millis()), 500, textYLocation)
 }
 
-function printPIDState({ Input, Output, SetPoint }, textYLocation) {
-  text('PID Input: ' + Math.floor(Input), 700, textYLocation)
-  text('Onput: ' + Math.floor(Output), 800, textYLocation)
-  text('SP: ' + Math.floor(SetPoint), 900, textYLocation)
+function printPIDState({ myState, outputSum }, textYLocation) {
+  const { Input, Output, SetPoint } = myState
+  text('PID SP: ' + Math.floor(SetPoint), 700, textYLocation)
+  text('Input: ' + Math.floor(Input), 800, textYLocation)
+  text('Onput: ' + Math.floor(Output), 900, textYLocation)
+  text('Sum(err): ' + Math.floor(outputSum), 1005, textYLocation)
 }
 
 function updateModel() {
   d.motor.update()
   d.motor2.update()
+  d.motor3.update()
 }
 
 function draw() {
   arduinoLoop()
   const motor1State = d.motor.state()
   const motor2State = d.motor2.state()
+  const motor3State = d.motor3.state()
   drawBackground()
   drawMotor(motor1State)
   drawMotor(motor2State)
+  drawMotor(motor3State)
   drawState(motor1State, 30)
   drawState(motor2State, 50)
-  printPIDState(myPID.myState, 30)
-  printPIDState(myPID2.myState, 50)
+  drawState(motor3State, 70)
+  printPIDState(myPID, 30)
+  printPIDState(myPID2, 50)
+  printPIDState(myPID3, 70)
   updateModel()
+}
+
+function downloadCsv(pid) {
+  const rows = pid
+    .getIterationData()
+    .map(({ t, input, output, setPoint, errSum, outMax, outMin }) =>
+      [t, input, output, setPoint, errSum, outMax, outMin].join(',')
+    )
+
+  const csvContent =
+    'data:text/csv;charset=utf-8,' +
+    'time,Input,Output,SetPoint,errSum,outMax,outMin\n' +
+    rows.join('\n')
+  const encodedUri = encodeURI(csvContent)
+  window.open(encodedUri)
 }
