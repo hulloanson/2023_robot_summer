@@ -5,4 +5,6 @@ void setupEncoder();
 
 void readEncoder();
 
+double *calcEncoder();
+
 #endif

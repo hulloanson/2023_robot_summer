@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "movement-control.h"
-#include "encoder-control.h"
+#include "pid-control.h"
 #include "wifiSetup.h"
 #include "global-var.h"
 
