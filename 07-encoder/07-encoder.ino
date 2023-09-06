@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <ESP32Encoder.h>
+#include "PID_v1.h"
 
 int PWM_FREQ = 5000;
 int PWM_RESOLUTION = 10;
@@ -183,6 +184,8 @@ int turnDirection = TURN_NONE;
 
 int turnAmount = 0;
 
+int timeOfLastCommand;
+
 /// @brief
 /// @param input
 ///         it takes 2 commands
@@ -192,6 +195,12 @@ void handleCommand(String input)
 {
   // Serial.print("handleCommand: got input:");
   // Serial.println(input);
+  if (input != "V0" && input != "T0")
+  {
+    // Serial.println("Command sent");
+    timeOfLastCommand = millis();
+  }
+
   if (input.length() < 2)
   {
     Serial.println("Command too short.");
@@ -230,7 +239,7 @@ void setupWifi()
   // {
   //   Serial.println("software start up ap failed");
   // }
-  if (!WiFi.begin("murphy 2.4", "Bernard1989!"))
+  if (!WiFi.begin("doghouse", "22512251"))
   {
     Serial.println("connecting to wifi failed.");
   }
@@ -277,6 +286,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     break;
   }
 }
+
 void setupWebsocketServer()
 {
   server.begin();
@@ -309,19 +319,49 @@ void setup()
   setupWebsocketServer();
 }
 
+int currentEncoderA = 0;
+int currentEncoderB = 0;
+int startOfCommandTime = 0;
+int lastIntervalTime = 0;
+
 int prevCountA = 0;
 int prevCountB = 0;
 
 int CHECK_INTERVAL_MS = 100;
 int ONE_S_MS = 1000;
 
+int encoderSpeedA;
+int encoderSpeedB;
+
 void readEncoder()
 {
+  currentEncoderA = encoderA.getCount();
+  currentEncoderB = encoderB.getCount();
+
+  double deA = abs(currentEncoderA - prevCountA);
+  double deB = abs(currentEncoderB - prevCountB);
+  double currentTime = millis();
+  double dt = (currentTime - lastIntervalTime);
+  if (dt == 100)
+  {
+    Serial.printf("Speed/velocity A is %f. de is %f. dt is %f. \n", (deA / dt), deA, dt);
+    Serial.printf("Speed/velocity B is %f. de is %f. dt is %f. \n", (deB / dt), deB, dt);
+    lastIntervalTime = currentTime;
+    prevCountA = currentEncoderA;
+    prevCountB = currentEncoderB;
+  }
 }
 
 void loop()
 {
   server.loop();
+
   drive(velocity, turnDirection, turnAmount);
   readEncoder();
+  if (millis() - timeOfLastCommand == 50)
+  {
+    velocity = 0;
+    turnDirection = TURN_NONE;
+    turnAmount = 0;
+  }
 }

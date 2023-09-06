@@ -1,193 +1,190 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Robot control app</title>
-    <script>
-      // Display the key states in HTML
-      document.addEventListener("DOMContentLoaded", function () {
-        const ws = new WebSocket("ws://10.0.0.197:9090");
 
-        // Variables to store the key states
-        var keyUpDown = {
-          ArrowLeft: false,
-          ArrowUp: false,
-          ArrowRight: false,
-          ArrowDown: false,
-        };
+<head>
+  <title>Robot control app</title>
+  <script>
+    // Display the key states in HTML
+    document.addEventListener("DOMContentLoaded", function () {
+      const ws = new WebSocket("ws://192.168.86.63:9090");
 
-        var connected = false;
+      // Variables to store the key states
+      var keyUpDown = {
+        ArrowLeft: false,
+        ArrowUp: false,
+        ArrowRight: false,
+        ArrowDown: false,
+      };
 
-        ws.onopen = function () {
-          connect = true;
-          console.log("Connected");
-        };
+      var connected = false;
 
-        ws.onclose = function () {
-          connect = false;
-          console.log("Disconnected");
-        };
+      ws.onopen = function () {
+        connect = true;
+        console.log("Connected");
+      };
 
-        function parseReadings(readingsString) {
-          const readings = [];
-          for (const readingString of readingsString.split(",")) {
-            readings.push(parseFloat(readingString));
-          }
-          return readings;
+      ws.onclose = function () {
+        connect = false;
+        console.log("Disconnected");
+      };
+
+      function parseReadings(readingsString) {
+        const readings = [];
+        for (const readingString of readingsString.split(",")) {
+          readings.push(parseFloat(readingString));
         }
+        return readings;
+      }
 
-        const encoderSpeedsDisplay = document.getElementById(
-          "encoder-speeds-display"
-        );
-        const positionsDisplay = document.getElementById("positions-display");
-        const targetSpeedDisplay = document.getElementById(
-          "target-speeds-display"
-        );
-        const ratiosDisplay = document.getElementById("ratios-display");
+      const encoderSpeedsDisplay = document.getElementById(
+        "encoder-speeds-display"
+      );
+      const positionsDisplay = document.getElementById("positions-display");
+      const targetSpeedDisplay = document.getElementById(
+        "target-speeds-display"
+      );
+      const ratiosDisplay = document.getElementById("ratios-display");
 
-        function readingToDisplayString(name, reading) {
-          var toDisplay;
-          if (Number.isInteger(reading)) {
-            toDisplay = reading;
-          } else {
-            toDisplay = "Unknown";
-          }
-          return name + ":" + toDisplay;
+      function readingToDisplayString(name, reading) {
+        var toDisplay;
+        if (Number.isInteger(reading)) {
+          toDisplay = reading;
+        } else {
+          toDisplay = "Unknown";
         }
+        return name + ":" + toDisplay;
+      }
 
-        function displayReadings(elem, titles, readings) {
-          var displayString = "";
-          for (var i = 0; i < readings.length; i++) {
-            displayString += titles[i] + ": " + readings[i] + "<br/>";
-          }
-          elem.innerHTML = displayString;
+      function displayReadings(elem, titles, readings) {
+        var displayString = "";
+        for (var i = 0; i < readings.length; i++) {
+          displayString += titles[i] + ": " + readings[i] + "<br/>";
         }
+        elem.innerHTML = displayString;
+      }
 
-        ws.onmessage = function (event) {
-          const message = event.data;
-          const [type, data] = message.split(":");
-          if (type === "E") {
-            const readings = parseReadings(data);
-            displayReadings(
-              encoderSpeedsDisplay,
-              ["Encoder Speed of A", "Encoder Speed of B"],
-              readings
-            );
-          } else if (type === "P") {
-            const readings = parseReadings(data);
-            displayReadings(
-              positionsDisplay,
-              ["Position of A", "Position of B"],
-              readings
-            );
-          } else if (type === "S") {
-            const readings = parseReadings(data);
-            displayReadings(
-              targetSpeedDisplay,
-              ["Target Speed of A", "Target Speed of B"],
-              readings
-            );
-          } else if (type === "R") {
-            const readings = parseReadings(data);
-            displayReadings(
-              ratiosDisplay,
-              [
-                "Speed of A / Encoder speed of A",
-                "Speed of B / Encoder speed of B",
-              ],
-              readings
-            );
-          }
-        };
-
-        const isWSConnected = function () {
-          return ws && ws.readyState === ws.OPEN;
-        };
-
-        // Event listeners
-        document.addEventListener("keydown", function (event) {
-          // console.log("keydown", event);
-          keyUpDown[event.key] = true;
-        });
-
-        document.addEventListener("keyup", function (event) {
-          // console.log("keyup", event);
-          keyUpDown[event.key] = false;
-        });
-
-        const keyStateElems = document.querySelectorAll(".key-state");
-        const connectionStateElem = document.getElementById("connection-state");
-        const updateDisplay = function () {
-          for (var i = 0; i < keyStateElems.length; i++) {
-            var div = keyStateElems[i];
-            var span = div.querySelector("span");
-            var key = span.id;
-            span.innerHTML = keyUpDown[key];
-          }
-          connectionStateElem.innerHTML = isWSConnected()
-            ? "Connected"
-            : "Disconnected. Wait, or connect robot wifi and refresh the page.";
-        };
-
-        const sendCommands = function () {
-          if (!isWSConnected()) return;
-          var command;
-
-          const speed = parseInt(
-            document.getElementById("speed-setting").value
+      ws.onmessage = function (event) {
+        const message = event.data;
+        const [type, data] = message.split(":");
+        if (type === "E") {
+          const readings = parseReadings(data);
+          displayReadings(
+            encoderSpeedsDisplay,
+            ["Encoder Speed of A", "Encoder Speed of B"],
+            readings
           );
+        } else if (type === "P") {
+          const readings = parseReadings(data);
+          displayReadings(
+            positionsDisplay,
+            ["Position of A", "Position of B"],
+            readings
+          );
+        } else if (type === "S") {
+          const readings = parseReadings(data);
+          displayReadings(
+            targetSpeedDisplay,
+            ["Target Speed of A", "Target Speed of B"],
+            readings
+          );
+        } else if (type === "R") {
+          const readings = parseReadings(data);
+          displayReadings(
+            ratiosDisplay,
+            [
+              "Speed of A / Encoder speed of A",
+              "Speed of B / Encoder speed of B",
+            ],
+            readings
+          );
+        }
+      };
 
-          if (keyUpDown["ArrowUp"]) {
-            command = "V" + speed;
-          } else if (keyUpDown["ArrowDown"]) {
-            command = "V-" + speed;
-          } else {
-            command = "V0";
-          }
-          ws.send(command);
+      const isWSConnected = function () {
+        return ws && ws.readyState === ws.OPEN;
+      };
 
-          var command;
-          if (keyUpDown["ArrowRight"]) {
-            command = "T100";
-          } else if (keyUpDown["ArrowLeft"]) {
-            command = "T-100";
-          } else {
-            command = "T0";
-          }
-          ws.send(command);
-        };
-
-        setInterval(() => {
-          sendCommands();
-          updateDisplay();
-        }, 50);
+      // Event listeners
+      document.addEventListener("keydown", function (event) {
+        // console.log("keydown", event);
+        keyUpDown[event.key] = true;
       });
-    </script>
-  </head>
-  <body>
-    <div>
-      Inputs:
-      <p>
-        <input
-          id="speed-setting"
-          type="number"
-          min="-1024"
-          max="1024"
-          value="200"
-        />
-      </p>
-      <div class="key-state">Left: <span id="ArrowLeft"></span></div>
-      <div class="key-state">Up: <span id="ArrowUp"></span></div>
-      <div class="key-state">Right: <span id="ArrowRight"></span></div>
-      <div class="key-state">Down: <span id="ArrowDown"></span></div>
-      <div><span id="connection-state"></span></div>
-    </div>
-    <hr />
-    <div>
-      Outputs:
-      <p id="encoder-speeds-display"></p>
-      <p id="positions-display"></p>
-      <p id="target-speeds-display"></p>
-      <p id="ratios-display"></p>
-    </div>
-  </body>
+
+      document.addEventListener("keyup", function (event) {
+        // console.log("keyup", event);
+        keyUpDown[event.key] = false;
+      });
+
+      const keyStateElems = document.querySelectorAll(".key-state");
+      const connectionStateElem = document.getElementById("connection-state");
+      const updateDisplay = function () {
+        for (var i = 0; i < keyStateElems.length; i++) {
+          var div = keyStateElems[i];
+          var span = div.querySelector("span");
+          var key = span.id;
+          span.innerHTML = keyUpDown[key];
+        }
+        connectionStateElem.innerHTML = isWSConnected()
+          ? "Connected"
+          : "Disconnected. Wait, or connect robot wifi and refresh the page.";
+      };
+
+      const sendCommands = function () {
+        if (!isWSConnected()) return;
+        var command;
+
+        const speed = parseInt(
+          document.getElementById("speed-setting").value
+        );
+
+        if (keyUpDown["ArrowUp"]) {
+          command = "V" + speed;
+        } else if (keyUpDown["ArrowDown"]) {
+          command = "V-" + speed;
+        } else {
+          command = "V0";
+        }
+        ws.send(command);
+
+        var command;
+        if (keyUpDown["ArrowRight"]) {
+          command = "T100";
+        } else if (keyUpDown["ArrowLeft"]) {
+          command = "T-100";
+        } else {
+          command = "T0";
+        }
+        ws.send(command);
+      };
+
+      setInterval(() => {
+        sendCommands();
+        updateDisplay();
+      }, 50);
+    });
+  </script>
+</head>
+
+<body>
+  <div>
+    Inputs:
+    <p>
+      <input id="speed-setting" type="number" min="-1024" max="1024" value="200" />
+    </p>
+    <div class="key-state">Left: <span id="ArrowLeft"></span></div>
+    <div class="key-state">Up: <span id="ArrowUp"></span></div>
+    <div class="key-state">Right: <span id="ArrowRight"></span></div>
+    <div class="key-state">Down: <span id="ArrowDown"></span></div>
+    <div><span id="connection-state"></span></div>
+  </div>
+  <hr />
+  <div>
+    Outputs:
+    <p id="encoder-speeds-display"></p>
+    <p id="positions-display"></p>
+    <p id="target-speeds-display"></p>
+    <p id="ratios-display"></p>
+  </div>
+</body>
+
 </html>

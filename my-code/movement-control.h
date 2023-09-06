@@ -7,6 +7,6 @@ void standby(int shouldStandby);
 
 void drive(int velocity, int turnDirection = 0, int turnAmount = 0);
 
-void setupMovementPins();
+void setupPins();
 
 #endif

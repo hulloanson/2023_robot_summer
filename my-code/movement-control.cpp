@@ -61,6 +61,9 @@ void setupPins()
     setupPwmPin(PWMB_PIN, PWMB_CHANNEL);
 }
 
+double aSpeedFactor = 1;
+double bSpeedFactor = 1;
+
 void standby(int shouldStandby)
 {
     // shouldStandBy = 1: standby
@@ -76,8 +79,21 @@ void standby(int shouldStandby)
     }
 }
 
-double aSpeedFactor = 1;
-double bSpeedFactor = 1;
+void spinMotorAdjusted(int channel, int speed)
+{
+    ledcWrite(channel, speed);
+    return;
+    double factor = 1;
+    if (channel == PWMA_CHANNEL)
+    {
+        factor = aSpeedFactor;
+    }
+    else if (channel == PWMB_CHANNEL)
+    {
+        factor = bSpeedFactor;
+    }
+    ledcWrite(channel, int(double(speed) * factor));
+}
 
 int targetSpeedA = 0, targetSpeedB = 0;
 double aRatio = 0, bRatio = 0;
@@ -133,20 +149,4 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
     // ledcWrite(fastChannel, fastChannelSpeed);
     spinMotorAdjusted(PWMA_CHANNEL, targetSpeedA);
     spinMotorAdjusted(PWMB_CHANNEL, targetSpeedB);
-}
-
-void spinMotorAdjusted(int channel, int speed)
-{
-    ledcWrite(channel, speed);
-    return;
-    double factor = 1;
-    if (channel == PWMA_CHANNEL)
-    {
-        factor = aSpeedFactor;
-    }
-    else if (channel == PWMB_CHANNEL)
-    {
-        factor = bSpeedFactor;
-    }
-    ledcWrite(channel, int(double(speed) * factor));
 }

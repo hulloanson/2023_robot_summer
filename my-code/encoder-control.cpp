@@ -14,7 +14,7 @@ int E1B_PIN = 39;
 int E2A_PIN = 34;
 int E2B_PIN = 35;
 
-void setupEncoder()
+void setupEncoder()  
 {
     ESP32Encoder::useInternalWeakPullResistors = UP;
     encoderA.attachHalfQuad(E1A_PIN, E1B_PIN);

@@ -32,7 +32,7 @@ void setupSerial()
 void setup()
 {
     setupSerial();
-    setupMovementPins();
+    setupPins();
     standby(1);
     setupWifi();
     setupWebsocketServer();
