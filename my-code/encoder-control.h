@@ -3,8 +3,6 @@
 
 void setupEncoder();
 
-void readEncoder();
-
 void calcEncoder();
 
 #endif

@@ -44,6 +44,10 @@
                 "target-speeds-display"
             );
             const ratiosDisplay = document.getElementById("ratios-display");
+            const messageDisplay = document.getElementById(
+                "message-display"
+            );
+
 
             function readingToDisplayString(name, reading) {
                 var toDisplay;
@@ -97,6 +101,8 @@
                         ],
                         readings
                     );
+                } else {
+                    messageDisplay.innerHTML = message;
                 }
             };
 
@@ -184,7 +190,11 @@
         <p id="positions-display"></p>
         <p id="target-speeds-display"></p>
         <p id="ratios-display"></p>
-
+    </div>
+    <hr />
+    <div>
+        Message:
+        <p id="message-display"></p>
     </div>
 </body>
 

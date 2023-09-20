@@ -42,18 +42,3 @@ void calcEncoder()
         lastIntervalTime = currentTime;
     }
 }
-
-void readEncoder()
-{
-    currentEncoderA = encoderA.getCount();
-    currentEncoderB = encoderB.getCount();
-
-    if (currentTime - lastIntervalTime == 100)
-    {
-        Serial.printf("Speed/velocity A is %d. \n", encoderSpeedA);
-        Serial.printf("Speed/velocity B is %d. \n", encoderSpeedB);
-        lastIntervalTime = currentTime;
-        prevCountA = currentEncoderA;
-        prevCountB = currentEncoderB;
-    }
-}
