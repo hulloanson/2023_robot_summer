@@ -9,4 +9,6 @@ void runServerLoop();
 
 void updateDisplay();
 
+void sendMessage(String msg);
+
 #endif
