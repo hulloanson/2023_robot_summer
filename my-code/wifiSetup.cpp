@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebSocketsServer.h>
+#include <iostream>
 
 #include "global-var.h"
 
@@ -26,13 +27,33 @@ void setupWifi()
     Serial.println(WiFi.localIP());
 }
 
+void updateDisplay(String speed)
+{
+    // encoder speed (E:), encoder pos (P:), encoder target (A:), enocoder ratio (R:)
+
+    String msgSpeed = "E:" + String(encoderSpeedA) + "," + String(encoderSpeedB);
+    String msgPosition = "P:" + String(currentEncoderA) + "," + String(currentEncoderB);
+
+    double ratioA = speed.toInt() / encoderSpeedA;
+    double ratioB = speed.toInt() / encoderSpeedB;
+
+    Serial.printf("Ratio a %d. Ratio b %d. \n", ratioA, ratioB);
+
+    String msgRatio = "R:" + String(ratioA) + "," + String(ratioB);
+
+    server.sendTXT(currentClientId, msgSpeed);
+    server.sendTXT(currentClientId, msgPosition);
+    server.sendTXT(currentClientId, speed);
+    server.sendTXT(currentClientId, msgRatio);
+}
+
 void handleCommand(String input)
 {
     // Serial.print("handleCommand: got input:");
     // Serial.println(input);
-    if (input != "V0" && input != "T0")
+    if (input != "V0" || input != "T0")
     {
-        // Serial.println("Command sent");
+        Serial.println("Command sent");
         timeOfLastCommand = millis();
     }
 
@@ -64,6 +85,7 @@ void handleCommand(String input)
         }
         handleTurnAmount = abs(turnValue);
     }
+    updateDisplay(data);
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
@@ -91,6 +113,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
     case WStype_FRAGMENT_FIN:
         break;
     }
+}
+
+void sendMessage(String msg)
+{
+    server.sendTXT(currentClientId, msg);
 }
 
 void setupWebsocketServer()

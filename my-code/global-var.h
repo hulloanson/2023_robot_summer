@@ -20,6 +20,9 @@ extern int lastIntervalTime;
 extern int prevCountA;
 extern int prevCountB;
 
-extern double currentTime;
+extern int currentTime;
+
+extern double encoderSpeedA;
+extern double encoderSpeedB;
 
 // #endif

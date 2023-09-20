@@ -2,6 +2,8 @@
 #include <WebSocketsServer.h>
 
 #include "global-var.h"
+#include "pid-control.h"
+#include "encoder-control.h"
 
 int AIN1_PIN = 14;
 int AIN2_PIN = 12;
@@ -17,6 +19,8 @@ int STBY_PIN = 26;
 
 int PWM_FREQ = 5000;
 int PWM_RESOLUTION = 10;
+
+int MAX_DUTY_CYCLE = (int)(pow(2, PWM_RESOLUTION) - 1);
 
 void setupPwmPin(uint8_t pin, uint8_t channel)
 {
@@ -145,8 +149,68 @@ void drive(int velocity, int turnDirection = TURN_NONE, int turnAmount = 0)
         // Serial.println("Setting motor directions to forward");
         setDirection(DIRECTION_FORWARD);
     }
-    //   //   // ledcWrite(slowChannel, slowChannelSpeed);
+    // ledcWrite(slowChannel, slowChannelSpeed);
     // ledcWrite(fastChannel, fastChannelSpeed);
     spinMotorAdjusted(PWMA_CHANNEL, targetSpeedA);
     spinMotorAdjusted(PWMB_CHANNEL, targetSpeedB);
 }
+
+void velocityFunc(double velo, int channel)
+{
+    double lastError = 0;
+    double lastInput = 0;
+    double currentVelo;
+
+    while (true)
+    {
+        /*
+        if (channel)
+            currentVelo = calcEncoder()[1];
+        else
+            currentVelo = calcEncoder()[0];
+        */
+        if (abs(currentVelo) <= (velo - 0.5))
+        {
+            break;
+        }
+        double output = calcPIDOutput2(velo, currentVelo, lastError, lastInput);
+        ledcWrite(channel, output);
+    }
+
+    ledcWrite(channel, 0);
+}
+
+void setVelo(double velo)
+{
+    velocityFunc(velo, PWMA_CHANNEL);
+    velocityFunc(velo, PWMB_CHANNEL);
+}
+
+/*
+void move(int desiredDistance)
+{
+    bool moving = true;
+
+    double accL = 0;
+    double accR = 0;
+    double prevL = 0;
+    double prevR = 0;
+
+    while (moving)
+    {
+        double outputL = calcPIDOutput(desiredDistance, accL, accR, prevL, prevR)[0];
+        double outputR = calcPIDOutput(desiredDistance, accL, accR, prevL, prevR)[1];
+
+        if (outputL > 255)
+            outputL = 255;
+        else if (outputL < -255)
+            outputL = -255;
+        if (outputR > 255)
+            outputL = 255;
+        if (outputR < -255)
+            outputL = -255;
+
+        drive(outputL);
+    }
+}
+*/

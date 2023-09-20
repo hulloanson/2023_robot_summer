@@ -3,9 +3,6 @@
 
 #include "global-var.h"
 
-int encoderSpeedA;
-int encoderSpeedB;
-
 ESP32Encoder encoderA;
 ESP32Encoder encoderB;
 
@@ -23,18 +20,27 @@ void setupEncoder()
     encoderB.setCount(0);
 }
 
-double *calcEncoder()
+void calcEncoder()
 {
+    currentEncoderA = encoderA.getCount();
+    currentEncoderB = encoderB.getCount();
+
     double deA = abs(currentEncoderA - prevCountA);
     double deB = abs(currentEncoderB - prevCountB);
     currentTime = millis();
     double dt = (currentTime - lastIntervalTime);
 
-    double speedA = deA / dt;
-    double speedB = deB / dt;
+    // Serial.println(dt);
 
-    double calculations[3] = {speedA, speedB, dt};
-    return calculations;
+    if (dt >= 100)
+    {
+        encoderSpeedA = deA / dt;
+        encoderSpeedB = deB / dt;
+
+        prevCountA = currentEncoderA;
+        prevCountB = currentEncoderB;
+        lastIntervalTime = currentTime;
+    }
 }
 
 void readEncoder()
@@ -42,12 +48,10 @@ void readEncoder()
     currentEncoderA = encoderA.getCount();
     currentEncoderB = encoderB.getCount();
 
-    // speedA = calcEncoder
-
-    if (calcEncoder()[2] == 100)
+    if (currentTime - lastIntervalTime == 100)
     {
-        Serial.printf("Speed/velocity A is %f. dt is %f. \n", calcEncoder()[0], calcEncoder()[2]);
-        Serial.printf("Speed/velocity B is %f. dt is %f. \n", calcEncoder()[1], calcEncoder()[2]);
+        Serial.printf("Speed/velocity A is %d. \n", encoderSpeedA);
+        Serial.printf("Speed/velocity B is %d. \n", encoderSpeedB);
         lastIntervalTime = currentTime;
         prevCountA = currentEncoderA;
         prevCountB = currentEncoderB;

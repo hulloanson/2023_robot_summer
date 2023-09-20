@@ -7,4 +7,6 @@ void setupWebsocketServer();
 
 void runServerLoop();
 
+void updateDisplay();
+
 #endif

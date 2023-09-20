@@ -7,7 +7,28 @@ double kP = 0;
 double kI = 0;
 double kD = 0;
 
-void calcPIDOutput(int desiredPoint, double &accL, double &accR, double &prevL, double &prevR)
+double calcPIDOutput2(int desiredPoint, double input, double &lastError, double &lastInput)
+{
+
+    double error = desiredPoint - input;
+
+    double dInput = input - lastInput;
+
+    double iError = lastError + error;
+
+    double output = kP * error + kI * iError + kD * dInput;
+
+    output > 255 ? output = 255 : 0;
+
+    lastInput = input;
+
+    lastError = iError;
+
+    return output;
+}
+
+/*
+double *calcPIDOutput(int desiredPoint, double &accL, double &accR, double &prevL, double &prevR)
 {
     double distTravelledL = calcEncoder()[0];
     double distTravelledR = calcEncoder()[1];
@@ -18,23 +39,13 @@ void calcPIDOutput(int desiredPoint, double &accL, double &accR, double &prevL, 
     accL += errorL;
     accR += errorR;
 
-    double outputL = kP * errorR + kI * accL + kD * prevL;
+    double outputL = kP * errorL + kI * accL + kD * prevL;
+    double outputR = kP * errorR + kI * accR + kD * prevR;
 
     prevL = distTravelledL;
     prevR = distTravelledR;
+
+    double outputValues[2] = {outputL, outputR};
+    return outputValues;
 }
-
-void move(int desiredDistance)
-{
-    bool moving = true;
-
-    double accL;
-    double accR;
-    double prevL;
-    double prevR;
-
-    while (move)
-    {
-        calcPIDOutput(desiredDistance, accL, accR, prevL, prevR);
-    }
-}
+*/
