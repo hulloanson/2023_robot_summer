@@ -196,6 +196,7 @@ int turnAmount = 0;
 /// @param input
 ///         it takes 2 commands
 ///         1. V: V100 drive the robot forward, V-50 drive it backward (but slower), etc
+///         2. T: T0 keep the robot straight, T100 to turn robot all the way to the right, T-100 all the way to the left
 void handleCommand(String input)
 {
   if (input[0] == 'V')
