@@ -49,6 +49,7 @@ void updateDisplay(RobotStats *rStat)
     float ratioA = (float)rStat->leftVel / rStat->targetVel;
     float ratioB = (float)rStat->rightVel / rStat->targetVel;
     sendEncoderMessage2('R', ratioA, ratioB);
+    sendEncoderMessage('S', rStat->targetVel, rStat->targetVel);
     sendEncoderMessage('E', rStat->leftVel, rStat->rightVel);
     sendEncoderMessage('P', rStat->leftPos, rStat->rightPos);
 }
@@ -136,6 +137,7 @@ void runServerLoop()
     {
         handleVelocity = 0;
         // handleTurnDirection = TURN_NONE;
-        Serial.println("No Connection");
+        if (currentClientId > 0)
+            Serial.println("No Connection");
     }
 }
