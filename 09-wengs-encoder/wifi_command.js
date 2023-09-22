@@ -1,4 +1,4 @@
-const ROBOT_IP = '192.168.86.52'
+const ROBOT_IP = '192.168.86.39'
 
 // Variables to store the key states
 const keyUpDown = {
@@ -9,11 +9,12 @@ const keyUpDown = {
 }
 
 var connected = false
+var messageDisplay
 
 // Display the key states in HTML
 document.addEventListener('DOMContentLoaded', function () {
   const ws = new WebSocket(`ws://${ROBOT_IP}:9090`)
-
+  document.getElementById('robot-ip').innerText = 'Robot IP: ' + ROBOT_IP
   ws.onopen = function () {
     connect = true
     console.log('Connected')
@@ -44,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ['encoder-speeds', 'positions', 'target-speeds', 'ratios']
   )
 
-  const messageDisplay = document.getElementById('message-display')
+  messageDisplay = document.getElementById('message-display')
   function numToString(reading) {
     if (Number.isInteger(reading)) return parseInt(reading)
 
@@ -52,9 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return isNaN(num) ? 'Unknown' : reading
   }
 
-  ws.onmessage = function (event) {
-    // console.log('message', event)
-    const message = event.data
+  const handleRobotMessage = function (message) {
     const [type, data] = message.split(':')
     const displayByType = robotStatsDisplays[type]
     if (displayByType != null) {
@@ -68,11 +67,30 @@ document.addEventListener('DOMContentLoaded', function () {
         ' Right: ' +
         numToString(values[1])
     } else {
-      messageDisplay.innerHTML = message
-      // const p = document.createElement('p')
-      // p.innerHTML = message
-      // messageDisplay.insertBefore(p, messageDisplay.firstChild)
+      const children = messageDisplay.children
+      for (var i = children.length - 1; i > 10; i--) {
+        messageDisplay.removeChild(children[i])
+      }
+      const p = document.createElement('p')
+      p.innerHTML = message
+      messageDisplay.insertBefore(p, messageDisplay.firstChild)
     }
+
+    if (type === 'R' && data != null && data.length > 3) {
+      const values = data.split(',').map(parseFloat)
+      if (
+        values != null &&
+        values.length == 2 &&
+        !isNaN(values[0]) &&
+        !isNaN(values[1])
+      )
+        handleRobotMessage(`Left/Right Ratio: ${values[0] / values[1]}`)
+    }
+  }
+
+  ws.onmessage = function (event) {
+    const message = event.data
+    if (message != null) handleRobotMessage(message)
   }
 
   const isWSConnected = function () {
