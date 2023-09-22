@@ -33,4 +33,12 @@ function arduinoSetup() {
   d.motor2.velDefect = 2
 }
 
-function arduinoLoop() {}
+function arduinoLoop() {
+  model.Input = d.motor.analogRead(1)
+  myPID.Compute()
+  d.motor.analogWrite(model.Output)
+
+  model2.Input = d.motor2.analogRead(1)
+  myPID2.Compute()
+  d.motor2.analogWrite(model2.Output)
+}

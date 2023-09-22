@@ -45,9 +45,9 @@ void setup()
 
 void loop()
 {
-
+    runServerLoop();
     unsigned long now = millis();
-    if ((now - timeOfLastCommand) > 50)
+    if ((now - timeOfLastCommand) > COMMAND_EXPIRY_MS)
     {
         handleVelocity = 0;
         handleTurnDirection = TURN_NONE;
@@ -56,6 +56,4 @@ void loop()
 
     calcEncoder();
     // updateDisplay();
-
-    runServerLoop();
 }

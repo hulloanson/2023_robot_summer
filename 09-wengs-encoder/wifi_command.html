@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Robot control app</title>
+    <script src="./wifi_command.js"></script>
+  </head>
+
+  <body>
+    <div>
+      Inputs:
+      <p>
+        <input
+          id="speed-setting"
+          type="number"
+          min="-5000"
+          max="5000"
+          value="200"
+        />
+      </p>
+      <div class="key-state">Left: <span id="ArrowLeft"></span></div>
+      <div class="key-state">Up: <span id="ArrowUp"></span></div>
+      <div class="key-state">Right: <span id="ArrowRight"></span></div>
+      <div class="key-state">Down: <span id="ArrowDown"></span></div>
+      <div><span id="connection-state"></span></div>
+    </div>
+    <hr />
+    <div>
+      Outputs:
+      <p id="positions-display"></p>
+      <p id="encoder-speeds-display"></p>
+      <p id="target-speeds-display"></p>
+      <p id="ratios-display"></p>
+    </div>
+    <hr />
+    <div>
+      Message:
+      <div id="message-display"></div>
+    </div>
+  </body>
+</html>

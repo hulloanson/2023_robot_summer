@@ -25,12 +25,12 @@ void calcEncoder()
     currentEncoderA = encoderA.getCount();
     currentEncoderB = encoderB.getCount();
 
+    // Serial.printf("preCountA = %ld\tB = %ld\tCurrent A = %ld\tB = %ld\n", prevCountA, prevCountB, currentEncoderA, currentEncoderB);
+
     double deA = abs(currentEncoderA - prevCountA);
     double deB = abs(currentEncoderB - prevCountB);
     currentTime = millis();
     double dt = (currentTime - lastIntervalTime);
-
-    // Serial.println(dt);
 
     if (dt >= 100)
     {

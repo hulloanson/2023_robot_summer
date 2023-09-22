@@ -53,7 +53,7 @@ void handleCommand(String input)
     // Serial.println(input);
     if (input != "V0" || input != "T0")
     {
-        Serial.println("Command sent");
+        // Serial.println("Command sent");
         timeOfLastCommand = millis();
     }
 

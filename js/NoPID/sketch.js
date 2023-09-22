@@ -57,7 +57,7 @@ function draw() {
     d.motor.analogWrite(0)
   } else if (now - startTime < 5000) {
     d.motor.analogWrite(250)
-  } else if (now - startTime < 2700) {
+  } else if (now - startTime < 27000) {
     d.motor.analogWrite(0)
   }
 
