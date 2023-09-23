@@ -42,5 +42,5 @@ void loop()
         stats->SerialPrint("Main");
         lastPrintTs = userCommand->ts;
     }
-    delay(1000);
+    delay(10);
 }

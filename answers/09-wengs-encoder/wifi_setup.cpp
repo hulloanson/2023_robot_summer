@@ -115,12 +115,12 @@ void setupWebsocketServer()
 void runServerLoop()
 {
     server.loop();
-    // if ((millis() - userCommand.ts) > 10000)
-    // {
-    //     userCommand.command = 'M';
-    //     userCommand.p1 = 0;
-    //     userCommand.p2 = 0;
-    //     userCommand.ts = millis();
-    //     Serial.println("Connection Lost");
-    // }
+    if ((millis() - userCommand.ts) > 10000)
+    {
+        userCommand.command = 'M';
+        userCommand.p1 = 0;
+        userCommand.p2 = 0;
+        userCommand.ts = millis();
+        Serial.println("Connection Lost");
+    }
 }
