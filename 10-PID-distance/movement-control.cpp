@@ -109,7 +109,9 @@ void move(int leftVel, int rightVel)
     if (lastLeftVel != leftVel || lastRightVel != rightVel)
     {
         setDirection(leftVel > 0, rightVel > 0);
-        spinMotorAdjusted2(PWMA_CHANNEL, getMotorAPowerInput(leftVel));
+        int adj = getMotorAPowerInput(leftVel);
+        spinMotorAdjusted2(PWMA_CHANNEL, adj);
+        Serial.printf("Move: leftVel: %d\tAdj: %d\n", leftVel, adj);
         spinMotorAdjusted2(PWMB_CHANNEL, getMotorBPowerInput(rightVel));
         lastLeftVel = leftVel;
         lastRightVel = rightVel;
