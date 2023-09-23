@@ -24,7 +24,7 @@ int MAX_DUTY_CYCLE = (int)(pow(2, PWM_RESOLUTION) - 1);
 
 void setupPwmPin(uint8_t pin, uint8_t channel)
 {
-    ledcSetup(PWMA_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
+    ledcSetup(channel, PWM_FREQ, PWM_RESOLUTION);
     ledcAttachPin(pin, channel);
 }
 

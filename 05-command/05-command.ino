@@ -1,8 +1,5 @@
 #include <Arduino.h>
 
-int PWM_FREQ = 5000;
-int PWM_RESOLUTION = 10;
-
 int PWMA_CHANNEL = 0;
 
 int PWMA_PIN = 27;
@@ -19,6 +16,8 @@ int BIN2_PIN = 25;
 
 int STBY_PIN = 26;
 
+int PWM_FREQ = 5000;
+int PWM_RESOLUTION = 10;
 int MAX_DUTY_CYCLE = (int)(pow(2, PWM_RESOLUTION) - 1);
 
 unsigned long COMMAND_EXPIRY_MS = 5000;
